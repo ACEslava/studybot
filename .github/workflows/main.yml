@@ -25,6 +25,4 @@ jobs:
         with:
           options: "--check --verbose --line-length=88"
       - name: isort Format
-        uses: isort/isort-action@master
-        with:
-            requirementsFiles: "requirements.txt"
+        uses: isort/isort-action@v0.1.0
