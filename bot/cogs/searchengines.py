@@ -1,10 +1,9 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-from discord.ext import commands
-
 from cogs.search_engine_funcs.generic_search import Search
 from cogs.search_engine_funcs.google import GoogleSearch
+from discord.ext import commands
 
 if TYPE_CHECKING:
     from bot.studybot import StudyBot

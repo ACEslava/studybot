@@ -5,7 +5,6 @@ import traceback
 import aiohttp
 import discord
 from discord.ext import commands
-
 from functions.loading_message import get_loading_message
 
 initial_cogs = ("cogs.utilities", "cogs.searchengines")
