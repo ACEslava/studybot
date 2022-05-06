@@ -17,16 +17,14 @@ jobs:
       - name: flake8 Lint
         uses: py-actions/flake8@v2
         with:
-          ignore: "E203"
+          args: "--extend-ignore=E203"
           max-line-length: "88"
-          path: "src"
         
       - name: black Format
         uses: psf/black@stable
         with:
           options: "--check --verbose --line-length=88"
-          src: "./src"
       - name: isort Format
-        uses: isort/isort-action@master
+        uses: isort/isort-action@v0.1.0
         with:
-            requirementsFiles: "requirements.txt"
+          configuration: "--check-only --diff --profile black"
