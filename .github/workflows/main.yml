@@ -19,13 +19,11 @@ jobs:
         with:
           ignore: "E203"
           max-line-length: "88"
-          path: "src"
         
       - name: black Format
         uses: psf/black@stable
         with:
           options: "--check --verbose --line-length=88"
-          src: "./src"
       - name: isort Format
         uses: isort/isort-action@master
         with:
