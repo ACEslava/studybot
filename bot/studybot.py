@@ -14,7 +14,7 @@ bot_owner = int(os.environ["OWNER_ID"])
 application_id = os.environ["APPLICATION_ID"]
 
 
-class SearchIO(commands.Bot):
+class StudyBot(commands.Bot):
     """Class for the SearchIO Bot
 
     Attributes

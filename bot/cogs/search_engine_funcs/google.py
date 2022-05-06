@@ -10,13 +10,13 @@ from discord.ext import commands
 from functions.multi_page import PageTurnView
 
 if TYPE_CHECKING:
-    from searchio import SearchIO
+    from bot.studybot import StudyBot
 
 
 class GoogleSearch(Search):
     def __init__(
         self,
-        bot: "SearchIO",
+        bot: "StudyBot",
         ctx: commands.Context,
         message: discord.Message,
         args: list,

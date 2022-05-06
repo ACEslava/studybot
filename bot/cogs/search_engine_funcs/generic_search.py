@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import discord
     from discord.ext import commands
-    from searchio import SearchIO
+    from studybot import StudyBot
 
 
 class Search:
     def __init__(
         self,
-        bot: "SearchIO",
+        bot: "StudyBot",
         ctx: "commands.Context",
         message: "discord.Message",
         args: list,

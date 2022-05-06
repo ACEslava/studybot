@@ -7,13 +7,13 @@ from cogs.search_engine_funcs.generic_search import Search
 from cogs.search_engine_funcs.google import GoogleSearch
 
 if TYPE_CHECKING:
-    from searchio import SearchIO
+    from bot.studybot import StudyBot
 
 
 class SearchEngines(commands.Cog):
     """Various Search Engine Commands"""
 
-    def __init__(self, bot: "SearchIO"):
+    def __init__(self, bot: "StudyBot"):
         self.bot = bot
 
     @commands.command(
@@ -77,7 +77,7 @@ class SearchEngines(commands.Cog):
         Exception
             General exception for any misc errors
         """
-        
+
         # region args parsing
         UserCancel = KeyboardInterrupt
         if not args:  # checks if search is empty
@@ -177,5 +177,5 @@ class SearchEngines(commands.Cog):
         return
 
 
-async def setup(bot: "SearchIO") -> None:
+async def setup(bot: "StudyBot") -> None:
     await bot.add_cog(SearchEngines(bot))

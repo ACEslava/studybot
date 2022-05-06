@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from searchio import SearchIO
+from studybot import StudyBot
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         bot_token = os.environ["BOT_TOKEN"]
 
     # Run bot
-    SearchIO().run(bot_token)
+    StudyBot().run(bot_token)
 
 
 if __name__ == "__main__":
