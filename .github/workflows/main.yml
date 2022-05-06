@@ -1,0 +1,32 @@
+name: Lint
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source repository
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      
+      - name: flake8 Lint
+        uses: py-actions/flake8@v2
+        with:
+          ignore: "E203"
+          max-line-length: "88"
+          path: "src"
+        
+      - name: black Format
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose --line-length=88"
+          src: "./src"
+      - name: isort Format
+        uses: isort/isort-action@master
+        with:
+            requirementsFiles: "requirements.txt"
