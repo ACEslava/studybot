@@ -17,7 +17,7 @@ jobs:
       - name: flake8 Lint
         uses: py-actions/flake8@v2
         with:
-          extend-ignore: "E203"
+          args: "--extend-ignore=E203"
           max-line-length: "88"
         
       - name: black Format
