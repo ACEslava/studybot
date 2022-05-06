@@ -25,6 +25,6 @@ jobs:
         with:
           options: "--check --verbose --line-length=88"
       - name: isort Format
-        uses: isort/isort-action@v0.1.0
+        uses: isort/isort-action@master
         with:
           configuration: "--check-only --diff --profile black"
