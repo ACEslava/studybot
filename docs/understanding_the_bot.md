@@ -48,3 +48,9 @@ Onhandling should contain code related to [events](https://discordpy.readthedocs
 [utilities.py](../bot/cogs/utilities.py)
 
 Utilities should contain slash commands that don't make sense to create a cog for. If you don't feel a command should be placed in a specific cog (new or current) then it can be placed here.
+
+### Onhandling
+
+[onhandling.py](../bot/cogs/onhandling.py)
+
+Onhandling should contain code related to [events](https://discordpy.readthedocs.io/en/latest/api.html#event-reference). It might make sense to add onhandling listeners in other files, but any most onhandling should be placed here.

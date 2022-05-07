@@ -24,6 +24,7 @@ jobs:
         uses: psf/black@stable
         with:
           options: "--check --verbose --line-length=88"
+          
       - name: isort Format
         uses: isort/isort-action@master
         with:

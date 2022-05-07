@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from functions.loading_message import get_loading_message
 
-initial_cogs = ("cogs.utilities", "cogs.searchengines")
+initial_cogs = ("cogs.utilities", "cogs.searchengines", "cogs.onhandling")
 default_command_prefix = "&"
 bot_owner = int(os.environ["OWNER_ID"])
 application_id = os.environ["APPLICATION_ID"]
@@ -46,7 +46,9 @@ class StudyBot(commands.Bot):
         # Set up logging
         logging.basicConfig(
             format="%(asctime)s %(name)s [%(levelname)s]: %(message)s",
-            level=logging.INFO,
+            level=(
+                logging.DEBUG if os.environ["DEBUG_MODE"] == "true" else logging.INFO
+            ),
         )
         self.logger = logging.getLogger(__name__)
 
@@ -62,6 +64,8 @@ class StudyBot(commands.Bot):
 
     async def on_ready(self) -> None:
         self.logger.info("Bot successfully loaded")
+        game = discord.Game("with your mom")
+        await self.change_presence(status=discord.Status.idle, activity=game)
         return
 
     async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
