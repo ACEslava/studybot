@@ -13,7 +13,7 @@ source .venv/bin/activate
 
 Install dependencies
 ```
-python -m pip install .
+python -m pip install -r requirements.txt
 ```
 
 Run the bot

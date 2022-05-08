@@ -6,9 +6,7 @@
 
 ## Step 2: Configure your environment
 
-How you setup your environment is up to you. Its highly suggested to [create a virtual environment](https://realpython.com/python-virtual-environments-a-primer/) for development
-
-The bot is installable with `pip install -e .` for type hinting and code completion.
+How you setup your environment is up to you. Its highly suggested to [create a virtual environment](https://realpython.com/python-virtual-environments-a-primer/) for development.
 
 ### Setting up the environment to run the bot.
 
