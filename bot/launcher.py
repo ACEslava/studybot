@@ -17,10 +17,10 @@ def main():
 
     # Get environment variables
     load_dotenv()
-    if os.environ["DEBUG_MODE"] == "true":
-        bot_token = os.environ["BOT_TOKEN_DEV"]
+    if os.getenv("DEBUG_MODE") == "true":
+        bot_token = os.getenv("BOT_TOKEN_DEV")
     else:
-        bot_token = os.environ["BOT_TOKEN"]
+        bot_token = os.getenv("BOT_TOKEN")
 
     # Run bot
     StudyBot().run(bot_token)

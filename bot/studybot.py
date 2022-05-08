@@ -9,8 +9,8 @@ from functions.loading_message import get_loading_message
 
 initial_cogs = ("cogs.utilities", "cogs.searchengines", "cogs.onhandling")
 default_command_prefix = "&"
-bot_owner = int(os.environ["OWNER_ID"])
-application_id = os.environ["APPLICATION_ID"]
+bot_owner = int(os.getenv("OWNER_ID"))
+application_id = os.getenv("APPLICATION_ID")
 
 
 class StudyBot(commands.Bot):
@@ -47,7 +47,7 @@ class StudyBot(commands.Bot):
         logging.basicConfig(
             format="%(asctime)s %(name)s [%(levelname)s]: %(message)s",
             level=(
-                logging.DEBUG if os.environ["DEBUG_MODE"] == "true" else logging.INFO
+                logging.DEBUG if os.getenv("DEBUG_MODE") == "true" else logging.INFO
             ),
         )
         self.logger = logging.getLogger(__name__)
