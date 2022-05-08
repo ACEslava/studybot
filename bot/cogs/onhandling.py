@@ -9,17 +9,18 @@ if TYPE_CHECKING:
 
 
 class OnHandling(commands.Cog):
-    def __init__(self, bot: StudyBot):
+    def __init__(self, bot: "StudyBot"):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_message(message: discord.Message):
+    async def on_message(self, message: "discord.Message"):
         if (
             message.author.id == 399913903464644610
             and message.content.lower() == "hello friends"
         ):
             await message.channel.send("Hello <@399913903464644610>")
+            self.bot.logger.info("Said hello to Ricky")
 
 
-async def setup(bot: StudyBot) -> None:
+async def setup(bot: "StudyBot") -> None:
     await bot.add_cog(OnHandling(bot))
