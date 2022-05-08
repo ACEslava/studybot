@@ -3,12 +3,24 @@ from setuptools import setup
 
 def get_requirements():
     with open("requirements.txt") as f:
-        return list(f.read().splitlines())
+        requirements = list(
+            filter(
+                lambda x: not x.startswith("#") and not x.startswith("git+"),
+                f.read().splitlines(),
+            )
+        )
+    return requirements
 
 
 def get_dependency_links():
     with open("requirements.txt") as f:
-        return list(f.read().splitlines())
+        links = list(
+            filter(
+                lambda x: not x.startswith("#") and x.startswith("git+"),
+                f.read().splitlines(),
+            )
+        )
+    return links
 
 
 packages = [

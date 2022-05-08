@@ -1,6 +1,8 @@
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 from studybot import StudyBot
 
 
@@ -14,6 +16,7 @@ def main():
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
     # Get environment variables
+    load_dotenv()
     if os.environ["DEBUG_MODE"] == "true":
         bot_token = os.environ["BOT_TOKEN_DEV"]
     else:
