@@ -5,10 +5,13 @@ import traceback
 import aiohttp
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 from functions.loading_message import get_loading_message
 
 initial_cogs = ("cogs.utilities", "cogs.searchengines", "cogs.onhandling")
 default_command_prefix = "&"
+
+load_dotenv()
 bot_owner = int(os.getenv("OWNER_ID"))
 application_id = os.getenv("APPLICATION_ID")
 
