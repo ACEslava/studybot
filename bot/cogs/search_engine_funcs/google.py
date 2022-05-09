@@ -40,6 +40,9 @@ class GoogleSearch(Search):
                 "&safe=active",
             ]
         )
+        self.bot.logger.info(
+            str(self.ctx.author) + " searched Google for: " + self.query[:233]
+        )
         return
 
     async def __call__(self) -> None:
@@ -88,6 +91,7 @@ class GoogleSearch(Search):
             """
             try:
                 # creates and formats the embed
+                self.bot.logger.debug("Found image")
                 result_embed = discord.Embed(
                     title=f"Search results for: {self.query[:233]}"
                     f'{"..." if len(self.query) > 233 else ""}'
@@ -243,7 +247,7 @@ class GoogleSearch(Search):
             if soup.find("div", {"id": "main"}) is not None:
                 filtered_results = result_cleanup(soup)
                 # checks if user searched specifically for images
-                embeds = 1
+                embeds = None
 
                 # searches for the "images for" search result div
                 for results in filtered_results:
@@ -360,19 +364,17 @@ class GoogleSearch(Search):
                         )
                     )
 
-                self.bot.logger.info(
-                    self.ctx.author.name + " searched for: " + self.query[:233]
-                )
-
+                self.bot.logger.debug(f"Search returned {len(embeds)} results")
                 current_page = 0
                 await self.message.edit(
                     content="",
                     embed=embeds[current_page % len(embeds)],
-                    view=PageTurnView(self.ctx, embeds, 60.0),
+                    view=PageTurnView(self.ctx, embeds, self.message, 60.0),
                 )
                 return
 
             else:
+                self.bot.logger.debug("Search returned 0 results")
                 embed = discord.Embed(
                     title=(
                         "Search results for: "
@@ -388,4 +390,5 @@ class GoogleSearch(Search):
                 )
 
         except Exception as e:
+            await self.message.delete()
             await self.bot.on_command_error(self.ctx, e)

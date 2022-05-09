@@ -54,7 +54,7 @@ class SearchEngines(commands.Cog):
         return
 
     async def genericSearch(
-        self, ctx: commands.context, searchObject: Search, args: list
+        self, ctx: commands.Context, searchObject: Search, args: list
     ) -> None:
         """A generic search handler for bot search functions.
 
@@ -66,19 +66,9 @@ class SearchEngines(commands.Cog):
             Search engine wrapper class
         args : list
             Raw arguments from Discord
-
-        Raises
-        ------
-        UserCancel
-            If user cancelled
-        TimeoutError
-            If user took too long
-        Exception
-            General exception for any misc errors
         """
 
         # region args parsing
-        UserCancel = KeyboardInterrupt
         if not args:  # checks if search is empty
             await ctx.send(
                 "Enter search query or cancel"
@@ -88,18 +78,16 @@ class SearchEngines(commands.Cog):
                     "message", check=lambda m: m.author == ctx.author, timeout=30
                 )  # 30 seconds to reply
                 if userquery.content.lower() == "cancel":
-                    raise UserCancel
+                    raise self.bot.UserCancel
                 else:
                     userquery = userquery.content.split("--")
 
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 await ctx.send(
                     f"{ctx.author.mention} Error: You took too long. Aborting"
                 )  # aborts if timeout
-
-            except UserCancel:
-                await ctx.send("Aborting")
-                return
+            except Exception as e:
+                raise e
         else:
             userquery = " ".join([query.strip() for query in list(args)]).split(
                 "--"
