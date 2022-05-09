@@ -4,7 +4,9 @@ A general purpose bot for the study group discord
 Running the Bot
 ----
 Note: All commands are for a Linux-based environment
+
 Ensure you are running python 3.10 or greater
+
 Initialize your virtual environment
 ```
 python -m virtualenv .venv
