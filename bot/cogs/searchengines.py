@@ -108,6 +108,9 @@ class SearchEngines(commands.Cog):
         continueLoop = True
         while continueLoop:
             try:
+                self.bot.logger.info(
+                    str(ctx.author) + " searched for: " + userquery[:233]
+                )
                 message = await ctx.send(self.bot.loading_message())
                 messageEdit = asyncio.create_task(
                     self.bot.wait_for(

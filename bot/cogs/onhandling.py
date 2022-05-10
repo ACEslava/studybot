@@ -21,6 +21,10 @@ class OnHandling(commands.Cog):
             await message.channel.send("Hello <@399913903464644610>")
             self.bot.logger.info("Said hello to Ricky")
 
+    @commands.Cog.listener()
+    async def on_command(self, ctx: commands.Context):
+        self.bot.logger.info(str(ctx.author) + "used" + ctx.command.name)
+
 
 async def setup(bot: "StudyBot") -> None:
     await bot.add_cog(OnHandling(bot))

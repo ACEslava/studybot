@@ -40,9 +40,6 @@ class GoogleSearch(Search):
                 "&safe=active",
             ]
         )
-        self.bot.logger.info(
-            str(self.ctx.author) + " searched Google for: " + self.query[:233]
-        )
         return
 
     async def __call__(self) -> None:
