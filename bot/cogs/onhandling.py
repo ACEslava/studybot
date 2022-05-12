@@ -23,8 +23,13 @@ class OnHandling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
-        self.bot.logger.info(str(ctx.author) + "used" + ctx.command.name)
+        self.bot.logger.info(str(ctx.author) + " used " + ctx.command.name)
 
 
 async def setup(bot: "StudyBot") -> None:
+    bot.logger.debug(f"Loading {OnHandling.__module__.__str__()}")
     await bot.add_cog(OnHandling(bot))
+
+
+async def teardown(bot: "StudyBot") -> None:
+    bot.logger.debug(f"Unloading {OnHandling.__module__.__str__()}")

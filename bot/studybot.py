@@ -113,7 +113,6 @@ class StudyBot(commands.Bot):
     async def setup_hook(self) -> None:
         # Load cogs
         for cog in initial_cogs:
-            self.logger.debug(f"Loading {cog}")
             await self.load_extension(cog)
 
         # Initialise persistent ClientSession
@@ -121,7 +120,8 @@ class StudyBot(commands.Bot):
         self.logger.debug("Loading aiohttp session")
 
     async def on_ready(self) -> None:
-        self.logger.info("\n\nBot successfully loaded\n")
+        self.logger.info("-" * 15)
+        self.logger.info("Bot successfully loaded")
         game = discord.Game("with your mom")
         await self.change_presence(status=discord.Status.idle, activity=game)
         return
