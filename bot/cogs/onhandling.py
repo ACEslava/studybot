@@ -14,12 +14,9 @@ class OnHandling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: "discord.Message"):
-        if (
-            message.author.id == 399913903464644610
-            and message.content.lower() == "hello friends"
-        ):
-            await message.channel.send("Hello <@399913903464644610>")
-            self.bot.logger.info("Said hello to Ricky")
+        if message.content.lower() == "hello friends":
+            await message.channel.send(f"Hello <@{message.author.id}>")
+            self.bot.logger.info(f"Said hello to {message.author}")
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
