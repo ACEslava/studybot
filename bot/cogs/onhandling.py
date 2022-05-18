@@ -15,7 +15,7 @@ class OnHandling(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: "discord.Message"):
         if message.content.lower() == "hello friends":
-            await message.channel.send(f"Hello <@{message.author.id}>")
+            await message.channel.send(f"Hello <@{message.author.id}> :D")
             self.bot.logger.info(f"Said hello to {message.author}")
 
     @commands.Cog.listener()
@@ -24,7 +24,6 @@ class OnHandling(commands.Cog):
 
 
 async def setup(bot: "StudyBot") -> None:
-    bot.logger.debug(f"Loading {OnHandling.__module__.__str__()}")
     await bot.add_cog(OnHandling(bot))
 
 

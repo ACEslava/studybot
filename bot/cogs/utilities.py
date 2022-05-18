@@ -1,5 +1,6 @@
-from discord.ext import commands
 from typing import TYPE_CHECKING
+
+from discord.ext import commands
 
 if TYPE_CHECKING:
     from studybot import StudyBot
@@ -27,7 +28,6 @@ class Utilities(commands.Cog):
 
 
 async def setup(bot: "StudyBot") -> None:
-    bot.logger.debug(f"Loading {Utilities.__module__.__str__()}")
     await bot.add_cog(Utilities(bot))
 
 

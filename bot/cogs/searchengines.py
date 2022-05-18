@@ -168,7 +168,6 @@ class SearchEngines(commands.Cog):
 
 
 async def setup(bot: "StudyBot") -> None:
-    bot.logger.debug(f"Loading {SearchEngines.__module__.__str__()}")
     await bot.add_cog(SearchEngines(bot))
 
 

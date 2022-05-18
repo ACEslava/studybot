@@ -1,8 +1,10 @@
 import asyncio
 import re
+import time
 from typing import TYPE_CHECKING
 
 import aiohttp
+import cchardet
 import discord
 from bs4 import BeautifulSoup, SoupStrainer
 from cogs.search_engine_funcs.generic_search import Search
@@ -221,6 +223,7 @@ class GoogleSearch(Search):
             }
 
         try:
+            t0 = time.time()
             # gets the webscraped html of the google search
             session: aiohttp.ClientSession = self.bot.session
             async with session.get(
@@ -235,6 +238,8 @@ class GoogleSearch(Search):
                     ),
                     3,
                 )
+            # remove cchardet import error
+            _ = cchardet
 
             # Debug HTML output
             # with open('test.html', 'w', encoding='utf-8-sig') as file:
@@ -361,7 +366,10 @@ class GoogleSearch(Search):
                         )
                     )
 
-                self.bot.logger.debug(f"Search returned {len(embeds)} results")
+                t1 = time.time()
+                self.bot.logger.debug(
+                    f"Search returned {len(embeds)} results in {round(t1-t0, 5)} sec"
+                )
                 current_page = 0
                 await self.message.edit(
                     content="",

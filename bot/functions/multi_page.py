@@ -45,6 +45,9 @@ class PageTurnView(discord.ui.View):
     @discord.ui.button(emoji="🗑️", style=discord.ButtonStyle.red)
     async def delete_callback(self, interaction: discord.Interaction, _):
         await interaction.message.delete()
+        # Post delete cleanup
+        super().clear_items()
+        super().stop()
 
     # Prev page
     @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.gray)

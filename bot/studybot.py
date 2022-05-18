@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import sys
+import time
 import traceback
 from logging.handlers import TimedRotatingFileHandler
 
@@ -113,11 +114,17 @@ class StudyBot(commands.Bot):
     async def setup_hook(self) -> None:
         # Load cogs
         for cog in initial_cogs:
+            t0 = time.time()
             await self.load_extension(cog)
+            t1 = time.time()
+            self.logger.debug(f"{cog} loaded in {round(t1-t0, 5)} sec")
 
         # Initialise persistent ClientSession
+        t0 = time.time()
         self.session = aiohttp.ClientSession()
-        self.logger.debug("Loading aiohttp session")
+        await self.session.get("https://www.google.com")
+        t1 = time.time()
+        self.logger.debug(f"aiohttp session loaded in {round(t1-t0, 5)} sec")
 
     async def on_ready(self) -> None:
         self.logger.info("-" * 15)
@@ -139,7 +146,7 @@ class StudyBot(commands.Bot):
             return
 
         if ctx.author.id == self.owner_id:
-            await ctx.send(f"```{traceback.format_exc()}```")
+            await ctx.send(f"```{traceback.print_exc()}```")
             return
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
