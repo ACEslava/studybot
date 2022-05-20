@@ -1,11 +1,11 @@
-import asyncio
 import re
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 import aiohttp
 import cchardet
 import discord
+import validators
 from bs4 import BeautifulSoup, SoupStrainer
 from cogs.search_engine_funcs.generic_search import Search
 from discord.ext import commands
@@ -119,6 +119,7 @@ class GoogleSearch(Search):
             :rtype: discord.Embed
             """
             # creates and formats the embed
+
             result_embed = discord.Embed(
                 title=(
                     "Search results for:"
@@ -143,7 +144,6 @@ class GoogleSearch(Search):
             # extracts all meaningful text in the search result by div
             result_find = result.findAll("div")
             divs = tuple(d for d in result_find if not d.find("div"))
-
             titleinfo = [
                 " ".join(
                     [
@@ -222,8 +222,45 @@ class GoogleSearch(Search):
                 or result.strings == ""
             }
 
+        async def image_results(results: set) -> List[discord.Embed]:
+
+            # searches for the "images for" search result div
+            for result in results:
+                if "Images" in result.strings:
+                    images = result.findAll("img", recursive=True)
+
+                    # checks if image wont embed properly
+                    bad_urls = [
+                        image_url_parser(url)
+                        for url in images
+                        if not validators.url(image_url_parser(url))
+                    ]
+
+                    if len(bad_urls) > 0:
+                        images = [
+                            img for idx, img in enumerate(images) if idx not in bad_urls
+                        ]
+
+                    # creates embed list
+                    embeds = [
+                        embed
+                        for embed in list(map(image_embed, images))
+                        if embed.description is not (None or "")
+                    ]
+
+                    if len(embeds) > 0:
+                        del embeds[-1]
+                    return embeds
+
         try:
             t0 = time.time()
+
+            # checks if image is in search query
+            if bool(re.search("image", self.query.lower())):
+                has_found_image = True
+            else:
+                has_found_image = False
+
             # gets the webscraped html of the google search
             session: aiohttp.ClientSession = self.bot.session
             async with session.get(
@@ -238,122 +275,30 @@ class GoogleSearch(Search):
                     ),
                     3,
                 )
+
             # remove cchardet import error
             _ = cchardet
 
             # Debug HTML output
-            # with open('test.html', 'w', encoding='utf-8-sig') as file:
+            # with open("test.html", "w", encoding="utf-8-sig") as file:
             #     file.write(soup.prettify())
 
             # if the search returns results
             if soup.find("div", {"id": "main"}) is not None:
                 filtered_results = result_cleanup(soup)
+
                 # checks if user searched specifically for images
                 embeds = None
+                if has_found_image:
+                    embeds = await image_results(filtered_results)
 
-                # searches for the "images for" search result div
-                for results in filtered_results:
-                    if "Images" in results.strings:
-                        images = results.findAll("img", recursive=True)
-
-                        # checks if image wont embed properly
-                        bad_urls = []
-
-                        async def http_req(index, url):
-                            try:
-                                url = image_url_parser(url)
-                            except Exception:
-                                return
-
-                            async with self.bot.session.get(
-                                url, allow_redirects=False
-                            ) as resp:
-                                if resp.status == 301 or resp.status == 302:
-                                    bad_urls.append(index)
-
-                        try:
-                            await asyncio.gather(
-                                *[
-                                    http_req(index, url)
-                                    for index, url in enumerate(images)
-                                ]
-                            )
-                        except aiohttp.InvalidURL:
-                            break
-                        if len(bad_urls) > 0:
-                            images = [
-                                img
-                                for idx, img in enumerate(images)
-                                if idx not in bad_urls
-                            ]
-
-                        # creates embed list
-                        embeds = [
-                            embed
-                            for embed in list(map(image_embed, images))
-                            if embed.description is not (None or "")
-                        ]
-
-                        if len(embeds) > 0:
-                            del embeds[-1]
-                        break
-
+                # discord embed creation
                 if embeds is None or len(embeds) == 0:
                     embeds = [
                         embed
-                        for embed in list(map(text_embed, filtered_results))
+                        for embed in map(text_embed, filtered_results)
                         if embed.description is not (None or "")
                     ]
-
-                    # Creates search groupings
-                    new_embed_list = []
-                    i = 0
-                    combinedDesc = ""
-                    for j in range(len(embeds)):
-                        embed_desc = "\n".join(
-                            list(filter(None, embeds[j].description.split("\n")))
-                        )
-                        if "image" in embeds[j].to_dict().keys():
-                            combinedDesc = ""
-                            new_embed_list.append([embeds[j]])
-                            i = j
-                            continue
-                        else:
-                            if len(combinedDesc + embed_desc) < 1048:
-                                combinedDesc += "\n" + "\n" + embed_desc
-                                continue
-
-                            combinedDesc = ""
-                            new_embed_list.append(embeds[i : j + 1])
-                            i = j
-                    new_embed_list.append(embeds[i : j + 1])
-
-                    for idx, group in enumerate(new_embed_list):
-                        if len(group) == 1:
-                            continue
-                        combinedDesc = ""
-                        for embed in group:
-                            combinedDesc += (
-                                "\n"
-                                + "\n"
-                                + "\n".join(
-                                    list(filter(None, embed.description.split("\n")))
-                                )
-                            )
-
-                        new_embed_list[idx] = [
-                            discord.Embed(
-                                title=(
-                                    "Search results for:"
-                                    + f"{self.query[:233]}"
-                                    + f"{'...' if len(self.query) > 233 else ''}"
-                                ),
-                                description=combinedDesc,
-                                url=self.url,
-                            )
-                        ]
-
-                    embeds = [i[0] for i in new_embed_list]
 
                 # adds the page numbering footer to the embeds
                 for index, item in enumerate(embeds):

@@ -121,8 +121,10 @@ class StudyBot(commands.Bot):
 
         # Initialise persistent ClientSession
         t0 = time.time()
-        self.session = aiohttp.ClientSession()
-        await self.session.get("https://www.google.com")
+        self.session = aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(keepalive_timeout=360.0, limit=None)
+        )
+        await (await self.session.get("https://www.google.com")).text()
         t1 = time.time()
         self.logger.debug(f"aiohttp session loaded in {round(t1-t0, 5)} sec")
 
@@ -141,12 +143,12 @@ class StudyBot(commands.Bot):
             await ctx.send(e.reason)
             return
 
-        # If asyncio.TimeoutError is raised, ignore it
-        elif isinstance(e, asyncio.TimeoutError):
+        # If certain errors are raised, ignore it
+        elif isinstance(e, (asyncio.TimeoutError)):
             return
 
         if ctx.author.id == self.owner_id:
-            await ctx.send(f"```{traceback.print_exc()}```")
+            await ctx.send(f"```{traceback.format_exc()}```")
             return
 
     async def on_guild_join(self, guild: discord.Guild) -> None:

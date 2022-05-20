@@ -38,7 +38,11 @@ class PageTurnView(discord.ui.View):
     # Remove buttons on timeout
     async def on_timeout(self) -> None:
         super().clear_items()
-        await self.message.edit(view=self)
+        try:
+            await self.message.edit(view=self)
+        except Exception:
+            pass
+
         super().stop()
 
     # Delete result

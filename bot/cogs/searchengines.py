@@ -1,11 +1,13 @@
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from cogs.search_engine_funcs.generic_search import Search
 from cogs.search_engine_funcs.google import GoogleSearch
 from discord.ext import commands
 
 if TYPE_CHECKING:
+    import discord
+
     from bot.studybot import StudyBot
 
 
@@ -74,13 +76,13 @@ class SearchEngines(commands.Cog):
                 "Enter search query or cancel"
             )  # if empty, asks user for search query
             try:
-                userquery = await self.bot.wait_for(
+                usersearch: "discord.Message" = await self.bot.wait_for(
                     "message", check=lambda m: m.author == ctx.author, timeout=30
                 )  # 30 seconds to reply
-                if userquery.content.lower() == "cancel":
+                if usersearch.content.lower() == "cancel":
                     raise self.bot.UserCancel
-                else:
-                    userquery = userquery.content.split("--")
+
+                search_args = usersearch.content.split("--")
 
             except asyncio.TimeoutError:
                 await ctx.send(
@@ -89,19 +91,19 @@ class SearchEngines(commands.Cog):
             except Exception as e:
                 raise e
         else:
-            userquery = " ".join([query.strip() for query in list(args)]).split(
+            search_args = " ".join([query.strip() for query in list(args)]).split(
                 "--"
             )  # turns multiword search into single string.
 
-        if len(userquery) > 1:
-            args = userquery[1:]
-        else:
-            args = None
-
-        userquery = userquery[0]
+        userquery: str | None = search_args[0]
         # check if user actually searched something
         if userquery is None:
             return
+
+        if len(search_args) > 1:
+            search_args: List[str] = search_args[1:]
+        else:
+            search_args = None
         # endregion
 
         # allows users to edit their search query after results are returned
@@ -112,53 +114,29 @@ class SearchEngines(commands.Cog):
                     str(ctx.author) + " searched for: " + userquery[:233]
                 )
                 message = await ctx.send(self.bot.loading_message())
-                messageEdit = asyncio.create_task(
-                    self.bot.wait_for(
-                        "message_edit",
-                        check=lambda _, m: m.author == ctx.author and m == ctx.message,
-                    )
+
+                await searchObject(
+                    bot=self.bot,
+                    ctx=ctx,
+                    message=message,
+                    args=search_args,
+                    query=userquery,
+                )()
+
+                messageEdit = await self.bot.wait_for(
+                    "message_edit",
+                    check=lambda _, m: m.author == ctx.author and m == ctx.message,
                 )
 
-                search = asyncio.create_task(
-                    searchObject(
-                        bot=self.bot,
-                        ctx=ctx,
-                        message=message,
-                        args=args,
-                        query=userquery,
-                    )()
-                )
+                await message.delete()
 
-                # checks for message edit
-                waiting = [messageEdit, search]
-                done, waiting = await asyncio.wait(
-                    waiting, return_when=asyncio.FIRST_COMPLETED
-                )
-
-                # Task error handling
-                for t in done:
-                    if isinstance(t.exception(), Exception):
-                        raise t.exception()
-
-                if messageEdit in done:
-                    if type(messageEdit.exception()) == TimeoutError:
-                        raise TimeoutError
-                    await message.delete()
-                    messageEdit.cancel()
-                    search.cancel()
-
-                    messageEdit = messageEdit.result()
-                    userquery = messageEdit[1].content.replace(
-                        f"&{ctx.invoked_with} ", ""
-                    )  # finds the new user query
-                    continue
-                else:
-                    raise TimeoutError
+                userquery = messageEdit[1].content.replace(
+                    f"&{ctx.invoked_with} ", ""
+                )  # finds the new user query
+                continue
 
             except TimeoutError:  # after a minute, everything cancels
                 await message.clear_reactions()
-                messageEdit.cancel()
-                search.cancel()
                 continueLoop = False
                 return
 
