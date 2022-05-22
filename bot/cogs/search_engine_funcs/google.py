@@ -40,6 +40,9 @@ class GoogleSearch(Search):
                 self.query.replace(" ", "+"),
                 f"{rm_img}",
                 "&safe=active",
+                "&uule=w+CAIQICI5TW91bnRhaW4gVmlldyxTYW50YS",
+                "BDbGFyYSBDb3VudHksQ2FsaWZvcm5pYSxVbml0ZWQgU3RhdGVz",
+                "&num=10",
             ]
         )
         return
@@ -80,36 +83,6 @@ class GoogleSearch(Search):
             except Exception:
                 return ""
 
-        def image_embed(image: BeautifulSoup) -> discord.Embed:
-            """Generates Discord Embed from google result
-
-            :param image: Raw HTML from BeautifulSoup
-            :type image: BeautifulSoup
-            :return: Discord embed of image
-            :rtype: discord.Embed
-            """
-            try:
-                # creates and formats the embed
-                self.bot.logger.debug("Found image")
-                result_embed = discord.Embed(
-                    title=f"Search results for: {self.query[:233]}"
-                    f'{"..." if len(self.query) > 233 else ""}'
-                )
-
-                # sets the discord embed to the image
-                result_embed.set_image(url=image_url_parser(image))
-                result_embed.url = self.url
-            except Exception:
-                result_embed.set_image(
-                    url=(
-                        "https://external-preview.redd.it/"
-                        + "9HZBYcvaOEnh4tOp5EqgcCr_vKH7cjFJwkvw-45Dfjs.png?"
-                        + "auto=webp&s=ade9b43592942905a45d04dbc5065badb5aa3483"
-                    )
-                )
-            finally:
-                return result_embed
-
         def text_embed(result: BeautifulSoup) -> discord.Embed:
             """Generates Discord Embed for Google result
 
@@ -122,7 +95,7 @@ class GoogleSearch(Search):
 
             result_embed = discord.Embed(
                 title=(
-                    "Search results for:"
+                    "Search results for: "
                     + f'{self.query[:233]}{"..." if len(self.query) > 233 else ""}'
                 )
             )
@@ -223,6 +196,47 @@ class GoogleSearch(Search):
             }
 
         async def image_results(results: set) -> List[discord.Embed]:
+            """Finds images from results
+
+            Parameters
+            ----------
+            results : set
+                set of BeautifulSoup parsed HTML results
+
+            Returns
+            -------
+            List[discord.Embed]
+                List of image embeds
+            """
+
+            def image_embed(image: BeautifulSoup) -> discord.Embed:
+                """Generates Discord Embed from google result
+
+                :param image: Raw HTML from BeautifulSoup
+                :type image: BeautifulSoup
+                :return: Discord embed of image
+                :rtype: discord.Embed
+                """
+                try:
+                    # creates and formats the embed
+                    result_embed = discord.Embed(
+                        title=f"Search results for: {self.query[:233]}"
+                        f'{"..." if len(self.query) > 233 else ""}'
+                    )
+
+                    # sets the discord embed to the image
+                    result_embed.set_image(url=image_url_parser(image))
+                    result_embed.url = self.url
+                except Exception:
+                    result_embed.set_image(
+                        url=(
+                            "https://external-preview.redd.it/"
+                            + "9HZBYcvaOEnh4tOp5EqgcCr_vKH7cjFJwkvw-45Dfjs.png?"
+                            + "auto=webp&s=ade9b43592942905a45d04dbc5065badb5aa3483"
+                        )
+                    )
+                finally:
+                    return result_embed
 
             # searches for the "images for" search result div
             for result in results:
@@ -267,13 +281,10 @@ class GoogleSearch(Search):
                 self.url, headers={"User-Agent": "python-requests/2.25.1"}
             ) as data:
                 html = await data.text()
-                soup, index = (
-                    BeautifulSoup(
-                        html,
-                        features="lxml",
-                        parse_only=SoupStrainer("div", {"id": "main"}),
-                    ),
-                    3,
+                soup = BeautifulSoup(
+                    html,
+                    features="lxml",
+                    parse_only=SoupStrainer("div", {"id": "main"}),
                 )
 
             # remove cchardet import error
@@ -285,15 +296,13 @@ class GoogleSearch(Search):
 
             # if the search returns results
             if soup.find("div", {"id": "main"}) is not None:
+                embeds = []
                 filtered_results = result_cleanup(soup)
 
-                # checks if user searched specifically for images
-                embeds = None
+                # checks if user searched specifically for images, else use text embed
                 if has_found_image:
                     embeds = await image_results(filtered_results)
-
-                # discord embed creation
-                if embeds is None or len(embeds) == 0:
+                else:
                     embeds = [
                         embed
                         for embed in map(text_embed, filtered_results)
@@ -301,15 +310,17 @@ class GoogleSearch(Search):
                     ]
 
                 # adds the page numbering footer to the embeds
-                for index, item in enumerate(embeds):
-                    item.set_footer(
+                embeds = [
+                    e.set_footer(
                         text=(
                             "Page "
-                            + f"{index+1}/{len(embeds)}"
+                            + f"{i+1}/{len(embeds)}"
                             + "\nRequested by: "
                             + f"{str(self.ctx.author)}"
                         )
                     )
+                    for i, e in enumerate(embeds)
+                ]
 
                 t1 = time.time()
                 self.bot.logger.debug(
