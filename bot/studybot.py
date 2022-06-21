@@ -111,6 +111,9 @@ class StudyBot(commands.Bot):
         self.logger.addHandler(std)
         self.logger.addHandler(err)
 
+        # Sync check for slash commands
+        self.isSynced = False
+
     async def setup_hook(self) -> None:
         # Load cogs
         for cog in initial_cogs:
@@ -129,10 +132,27 @@ class StudyBot(commands.Bot):
         self.logger.debug(f"aiohttp session loaded in {round(t1-t0, 5)} sec")
 
     async def on_ready(self) -> None:
-        self.logger.info("-" * 15)
-        self.logger.info("Bot successfully loaded")
+        # Set presence
         game = discord.Game("with your mom")
         await self.change_presence(status=discord.Status.idle, activity=game)
+        self.logger.debug("Changing discord status")
+
+        # Sync commands
+        if not self.isSynced:
+            for cmd in await self.tree.fetch_commands():
+                if cmd not in self.tree.get_commands():
+                    await cmd.delete()
+            if os.getenv("DEBUG_MODE") == "true":
+                self.tree.copy_global_to(guild=discord.Object(id=801170004179157033))
+                await self.tree.sync(guild=discord.Object(id=801170004179157033))
+            else:
+                await self.tree.sync()
+
+            self.logger.debug("Syncing slash commands")
+
+        # Log ready event
+        self.logger.info("-" * 15)
+        self.logger.info("Bot successfully loaded")
         return
 
     async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:

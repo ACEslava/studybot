@@ -20,33 +20,10 @@ class SearchEngines(commands.Cog):
     @commands.command(
         name="google",
         brief="Search through Google",
-        usage="google [query]",
+        usage="[query]",
         help=(
             "Google search. If a keyword is detected in [query],"
             + " a special function will activate"
-        ),
-        description="\n".join(
-            [
-                "translate: Uses Google Translate API to translate languages.",
-                (
-                    "\n     Input auto detects language unless "
-                    + "specified with 'from [language]'"
-                ),
-                (
-                    "\n     Defaults to output English OR user locale if set,"
-                    + " unless explicitly specified with 'to [language]'"
-                ),
-                "\n     Example Query: translate مرحبا from arabic to spanish",
-                "\n\nimage: Searches only for image results.",
-                (
-                    "\n\ndefine: Queries dictionaryapi.dev for"
-                    + " an English definition of the word"
-                ),
-                (
-                    "\n\nweather: Queries openweathermap for "
-                    + "weather information at the specified location"
-                ),
-            ]
         ),
         aliases=["g", "googel", "googlr", "googl", "gogle", "gogl", "foogle"],
     )

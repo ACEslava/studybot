@@ -1,5 +1,7 @@
+import time
 from typing import TYPE_CHECKING
 
+import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
@@ -25,6 +27,34 @@ class Utilities(commands.Cog):
         except Exception:
             pass
         await ctx.send(f"Reloaded ```{success_cog}```")
+
+    @commands.hybrid_command(
+        name="ping", with_app_command=True, description="Checks API response time"
+    )
+    async def ping(self, ctx: commands.Context):
+        t0 = time.time()
+        if ctx.interaction is None:
+            msg = await ctx.send("Testing")
+            t1 = time.time()
+
+            await msg.edit(
+                content=None,
+                embed=discord.Embed(
+                    title="Ping", description=f"Reply in {round(t1-t0, 4)*1000} ms"
+                ),
+            )
+        else:
+            await ctx.interaction.response.send_message(
+                content="Testing", ephemeral=True
+            )
+            t1 = time.time()
+
+            await ctx.interaction.edit_original_message(
+                content=None,
+                embed=discord.Embed(
+                    title="Ping", description=f"Reply in {round(t1-t0, 4)*1000} ms"
+                ),
+            )
 
 
 async def setup(bot: "StudyBot") -> None:
