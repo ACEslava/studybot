@@ -132,6 +132,11 @@ class StudyBot(commands.Bot):
         self.logger.debug(f"aiohttp session loaded in {round(t1-t0, 5)} sec")
 
     async def on_ready(self) -> None:
+        # TEMP Leave all guilds
+        for guild in self.guilds:
+            if guild.id not in [801170004179157033, 774104445348478976]:
+                await guild.leave()
+
         # Set presence
         game = discord.Game("with your mom")
         await self.change_presence(status=discord.Status.idle, activity=game)
