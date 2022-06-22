@@ -12,7 +12,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from functions.loading_message import get_loading_message
 
-initial_cogs = ("cogs.utilities", "cogs.searchengines", "cogs.onhandling")
+initial_cogs = ("cogs.utilities", "cogs.searchengines", "cogs.onhandling", "cogs.fun")
 default_command_prefix = "&"
 
 load_dotenv()
@@ -163,13 +163,22 @@ class StudyBot(commands.Bot):
     async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
         # If user made an error in their command
         if isinstance(e, UserError):
-            await ctx.send(e.reason)
+            await ctx.send(embed=discord.Embed(description=e.reason))
             return
 
         # If certain errors are raised, ignore it
-        elif isinstance(e, (asyncio.TimeoutError)):
+        elif isinstance(e, (asyncio.TimeoutError, commands.errors.CommandNotFound)):
             return
 
+        # Cooldown
+        elif isinstance(e, commands.errors.CommandOnCooldown):
+            await ctx.send(
+                embed=discord.Embed(
+                    description="Command on cooldown. Wait "
+                    + f"{round(e.retry_after, 2)} sec"
+                )
+            )
+            return
         self.logger.error(e, exc_info=True)
 
         if ctx.author.id == self.owner_id:
