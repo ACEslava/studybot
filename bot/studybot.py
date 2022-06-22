@@ -17,7 +17,11 @@ default_command_prefix = "&"
 
 load_dotenv()
 bot_owner = int(os.getenv("OWNER_ID"))
-application_id = os.getenv("APPLICATION_ID")
+application_id = (
+    os.getenv("APPLICATION_ID_DEV")
+    if os.getenv("DEBUG_MODE") == "true"
+    else os.getenv("APPLICATION_ID")
+)
 
 
 class UserError(Exception):
@@ -132,11 +136,6 @@ class StudyBot(commands.Bot):
         self.logger.debug(f"aiohttp session loaded in {round(t1-t0, 5)} sec")
 
     async def on_ready(self) -> None:
-        # TEMP Leave all guilds
-        for guild in self.guilds:
-            if guild.id not in [801170004179157033, 774104445348478976]:
-                await guild.leave()
-
         # Set presence
         game = discord.Game("with your mom")
         await self.change_presence(status=discord.Status.idle, activity=game)
@@ -144,8 +143,9 @@ class StudyBot(commands.Bot):
 
         # Sync commands
         if not self.isSynced:
+            tree_cmds = [c.name for c in self.tree.get_commands()]
             for cmd in await self.tree.fetch_commands():
-                if cmd not in self.tree.get_commands():
+                if cmd.name not in tree_cmds:
                     await cmd.delete()
             if os.getenv("DEBUG_MODE") == "true":
                 self.tree.copy_global_to(guild=discord.Object(id=801170004179157033))
@@ -161,8 +161,6 @@ class StudyBot(commands.Bot):
         return
 
     async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
-        self.logger.error(e, exc_info=True)
-
         # If user made an error in their command
         if isinstance(e, UserError):
             await ctx.send(e.reason)
@@ -171,6 +169,8 @@ class StudyBot(commands.Bot):
         # If certain errors are raised, ignore it
         elif isinstance(e, (asyncio.TimeoutError)):
             return
+
+        self.logger.error(e, exc_info=True)
 
         if ctx.author.id == self.owner_id:
             await ctx.send(f"```{traceback.format_exc()}```")

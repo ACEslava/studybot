@@ -40,7 +40,10 @@ class Utilities(commands.Cog):
             await msg.edit(
                 content=None,
                 embed=discord.Embed(
-                    title="Ping", description=f"Reply in {round(t1-t0, 4)*1000} ms"
+                    title="Ping",
+                    description=f"Reply in {round((t1-t0)*1000, 4)} ms"
+                    + "\n"
+                    + f"API Latency: {self.bot.latency}",
                 ),
             )
         else:
@@ -52,7 +55,10 @@ class Utilities(commands.Cog):
             await ctx.interaction.edit_original_message(
                 content=None,
                 embed=discord.Embed(
-                    title="Ping", description=f"Reply in {round(t1-t0, 4)*1000} ms"
+                    title="Ping",
+                    description=f"Reply in {round((t1-t0)*1000, 2)} ms"
+                    + "\n"
+                    + f"API Latency: {round(self.bot.latency*1000, 2)} ms",
                 ),
             )
 
