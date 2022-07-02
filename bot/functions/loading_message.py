@@ -271,4 +271,4 @@ def get_loading_message() -> str:
         "Big Brother is always watching",
     ]
 
-    return f"<a:loading:860393918046273557> {random.choice(messages)}"
+    return random.choice(messages)

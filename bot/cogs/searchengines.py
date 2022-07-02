@@ -29,10 +29,10 @@ class SearchEngines(commands.Cog):
     )
     @commands.cooldown(1, 3, commands.BucketType.default)
     async def google(self, ctx: commands.Context, *args):
-        await self.genericSearch(ctx, GoogleSearch, args)
+        await self.__genericSearch(ctx, GoogleSearch, args)
         return
 
-    async def genericSearch(
+    async def __genericSearch(
         self, ctx: commands.Context, searchObject: Search, args: list
     ) -> None:
         """A generic search handler for bot search functions.
