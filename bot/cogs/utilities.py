@@ -31,6 +31,7 @@ class Utilities(commands.Cog):
     @commands.hybrid_command(
         name="ping", with_app_command=True, description="Checks API response time"
     )
+    @commands.cooldown(1, 10, commands.BucketType.default)
     async def ping(self, ctx: commands.Context):
         t0 = time.time()
         if ctx.interaction is None:
@@ -41,9 +42,9 @@ class Utilities(commands.Cog):
                 content=None,
                 embed=discord.Embed(
                     title="Ping",
-                    description=f"Reply in {round((t1-t0)*1000, 4)} ms"
+                    description=f"Reply in {round((t1-t0)*1000, 2)} ms"
                     + "\n"
-                    + f"API Latency: {self.bot.latency}",
+                    + f"API Latency: {round(self.bot.latency*1000, 2)} ms",
                 ),
             )
         else:

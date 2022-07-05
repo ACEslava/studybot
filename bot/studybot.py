@@ -178,11 +178,21 @@ class StudyBot(commands.Bot):
                     + f"{round(e.retry_after, 2)} sec"
                 )
             )
+            self.logger.info("Command ratelimited")
             return
         self.logger.error(e, exc_info=True)
 
         if ctx.author.id == self.owner_id:
-            await ctx.send(f"```{traceback.format_exc()}```")
+            await ctx.send(f"```{e}{chr(10)}{traceback.format_exc()}```")
+        else:
+            err_embed = discord.Embed(
+                title=":(",
+                description=(
+                    "An unknown error has occurred,"
+                    + " please try a different command."
+                ),
+            )
+            await ctx.send(embed=err_embed)
             return
 
     async def on_guild_join(self, guild: discord.Guild) -> None:

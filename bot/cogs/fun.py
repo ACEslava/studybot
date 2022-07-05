@@ -91,25 +91,31 @@ class Fun(commands.Cog):
     @commands.is_nsfw()
     @commands.cooldown(1, 10, commands.BucketType.default)
     async def boobs(self, ctx: commands.Context):
+        urls = (
+            "https://www.reddit.com/r/boobs.json?sort=new&limit=100",
+            "https://www.reddit.com/r/boobies.json?sort=new&limit=100",
+            "https://www.reddit.com/r/bustypetite.json?sort=new&limit=100",
+        )
         # Queries reddit API
         session: aiohttp.ClientSession = self.bot.session
-        async with session.get(
-            "https://www.reddit.com/r/boobs.json?sort=new&limit=100"
-        ) as data:
+        async with session.get(random.choice(urls)) as data:
             json = await data.json()
 
         # Finds random image post
         while 1:
-            img_data: dict = random.choice(json["data"]["children"])
-            if "url_overridden_by_dest" in img_data["data"].keys():
+            img_data: dict = random.choice(json["data"]["children"])["data"]
+            if "url_overridden_by_dest" in img_data.keys():
                 if any(
-                    url in img_data["data"]["url_overridden_by_dest"]
+                    url in img_data["url_overridden_by_dest"]
                     for url in ("i.imgur", "i.redd.it")
                 ):
-                    img: str = img_data["data"]["url_overridden_by_dest"]
+                    img: str = img_data["url_overridden_by_dest"]
                     break
 
-        embed = discord.Embed()
+        embed = discord.Embed(
+            title=img_data["title"],
+            url=f"https://www.reddit.com{img_data['permalink']}",
+        )
         embed.set_image(url=img)
         embed.set_footer(text=f"Requested by {ctx.author}")
         await ctx.send(embed=embed)
