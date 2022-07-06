@@ -20,7 +20,7 @@ python -m pip install -r requirements.txt
 
 Run the bot
 ```
-python -m launcher.py
+python -m bot/launcher.py
 ```
 
 Contributing

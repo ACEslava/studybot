@@ -87,19 +87,21 @@ class SearchEngines(commands.Cog):
         continueLoop = True
         while continueLoop:
             try:
-                self.bot.logger.info(
-                    str(ctx.author) + " searched for: " + userquery[:233]
-                )
                 self.bot.logger.debug("Sending loading message")
                 message = await ctx.send(self.bot.loading_message())
 
+                self.bot.logger.info(
+                    str(ctx.author) + " searched for: " + userquery[:233]
+                )
+
                 await searchObject(
-                    bot=self.bot,
-                    ctx=ctx,
-                    message=message,
-                    args=search_args,
-                    query=userquery,
+                    self.bot,
+                    ctx,
+                    message,
+                    search_args,
+                    userquery,
                 )()
+
                 self.bot.logger.debug("Waiting for message edit")
                 messageEdit = await self.bot.wait_for(
                     "message_edit",

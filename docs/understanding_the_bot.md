@@ -36,13 +36,6 @@ bot
  │   ├── onhandling.py
  │   └── utilities.py
 ```
-
-<!-- ### Onhandling
-
-[onhandling.py](../cogs/onhandling.py)
-
-Onhandling should contain code related to [events](https://discordpy.readthedocs.io/en/latest/api.html#event-reference). It might make sense to add onhandling listeners in other files, but any most onhandling should be placed here. Very simple onhandling can be placed in [studybot.py](../studybot.py). -->
-
 ### Utilities
 
 [utilities.py](../bot/cogs/utilities.py)
@@ -54,3 +47,42 @@ Utilities should contain slash commands that don't make sense to create a cog fo
 [onhandling.py](../bot/cogs/onhandling.py)
 
 Onhandling should contain code related to [events](https://discordpy.readthedocs.io/en/latest/api.html#event-reference). It might make sense to add onhandling listeners in other files, but any most onhandling should be placed here.
+
+### SearchEngines
+
+[onhandling.py](../bot/cogs/searchengines.py)
+
+SearchEngines should contain any search-related functionality (aka the original SearchIO commands).
+
+### Fun
+
+[onhandling.py](../bot/cogs/fun.py)
+
+Fun should contain miscellaneous, fun commands that wouldn't be relevant in other cogs.
+
+## The functions
+
+```
+bot
+ ├──functions
+ │   ├── loading_message.py
+ │   └── multi_page.py
+```
+
+The functions folder should contain major functions that are needed by other parts of the bot (e.g. the loading message, multi paged embeds). Each function MUST contain a numpy-formatted docstring detailing a summary, arguments, and returns for the function. A template is provided here:
+```
+"""summary
+
+Parameters
+----------
+arg1 : str
+    description
+arg2 : float
+    description
+
+Returns
+-------
+int
+    description
+"""
+```

@@ -109,7 +109,7 @@ class Fun(commands.Cog):
     @commands.is_nsfw()
     @commands.cooldown(1, 10, commands.BucketType.default)
     async def boobs(self, ctx: commands.Context):
-        # adds repeat checker if doesn't exist
+        # ensures posts are not repeated within 24hrs
         try:
             getattr(self.bot, "boobs_sentPosts")
             self.bot.boobs_sentPosts = {
@@ -149,6 +149,7 @@ class Fun(commands.Cog):
             Reddit post id
         """
         # Queries reddit API
+        msg = await ctx.send(self.bot.loading_message())
         img = ""
         self.bot.logger.debug("Sending API request")
 
@@ -159,28 +160,33 @@ class Fun(commands.Cog):
                 + subreddit[random.randint(0, len(subreddit) - 1)]
                 + ".json?sort=new&limit=100"
             )
+
             session: aiohttp.ClientSession = self.bot.session
-            async with session.get(url) as data:
+            async with session.get(
+                url, headers={"User-Agent": "studybot/reddit-search"}
+            ) as data:
                 posts = (await data.json())["data"]["children"]
+
             self.bot.logger.debug(f"API Response in {round(time.time()-t0, 5)} sec")
 
             # Finds random image post, limited to 10 retries
             self.bot.logger.debug("Getting random post from response")
             for _ in range(10):
                 img_data: dict = posts[random.randint(0, len(posts) - 1)]["data"]
-                if "url_overridden_by_dest" in img_data.keys():
-                    if (
-                        any(  # permitted domains
-                            url in img_data["url"] for url in ("i.imgur", "i.redd.it")
-                        )
-                        # prev. sent posts
-                        and img_data["id"] not in self.bot.boobs_sentPosts.keys()
-                    ):
-                        img = img_data["url"]
-                        break
+                if (
+                    # is img post
+                    "url_overridden_by_dest" in img_data.keys()
+                    # permitted domains
+                    and any(url in img_data["url"] for url in ("i.imgur", "i.redd.it"))
+                    # prev. sent posts
+                    and img_data["id"] not in self.bot.boobs_sentPosts.keys()
+                ):
+                    img = img_data["url"]
+                    break
 
         # Does not embed gif for compatibility
         if ".gifv" in img:
+            await msg.delete()
             await ctx.send(
                 content="https://www.reddit.com/r/"
                 + f"{img_data['subreddit']}/comments/{img_data['id']}"
@@ -198,7 +204,8 @@ class Fun(commands.Cog):
             embed.set_image(url=img)
             embed.set_footer(text=f"Requested by {ctx.author}")
             self.bot.logger.debug("Sending Embed")
-            await ctx.send(embed=embed)
+            await msg.edit(content=None, embed=embed)
+
         self.bot.logger.info(f"Sent image: {img}")
         return img_data["id"]
 

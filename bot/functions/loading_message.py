@@ -2,6 +2,14 @@ import random
 
 
 def get_loading_message() -> str:
+    """Returns a random message from a list of strings
+
+    Returns
+    -------
+    str
+        Loading message
+    """
+
     messages = [
         "Reticulating splines...",
         "Generating witty dialog...",

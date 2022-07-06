@@ -23,10 +23,13 @@ class OnHandling(commands.Cog):
     async def on_command(self, ctx: commands.Context):
         self.bot.logger.info(str(ctx.author) + " used " + ctx.command.name)
 
-        embed = discord.Embed(title=ctx.command.name, description=ctx.message.content)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-        embed.set_footer(text=time.asctime())
+        # Log all command uses
         if os.getenv("DEBUG_MODE") != "true":
+            embed = discord.Embed(
+                title=ctx.command.name, description=ctx.message.content
+            )
+            embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+            embed.set_footer(text=time.asctime())
             await self.bot.logging_channel.send(embed=embed)
 
 

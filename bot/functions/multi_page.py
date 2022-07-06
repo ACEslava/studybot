@@ -39,7 +39,13 @@ class PageTurnView(discord.ui.View):
         super().__init__(timeout=timeout)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        return interaction.user.id == self.ctx.message.author.id
+        # Checks if user or bot dev interacted
+        return any(
+            (
+                interaction.user.id == self.ctx.message.author.id,
+                interaction.user.id == self.bot.owner_id,
+            )
+        )
 
     # Remove buttons on timeout
     async def on_timeout(self) -> None:

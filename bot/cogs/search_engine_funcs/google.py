@@ -334,7 +334,6 @@ class GoogleSearch(Search):
                     + f"results in {round(time.time()-t0, 5)} sec"
                 )
                 current_page = 0
-                self.bot.logger.debug("Sending results")
                 await self.message.edit(
                     content="",
                     embed=embeds[current_page % len(embeds)],
