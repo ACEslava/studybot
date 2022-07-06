@@ -8,7 +8,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     import discord
 
-    from bot.studybot import StudyBot
+    from studybot import StudyBot
 
 
 class SearchEngines(commands.Cog):

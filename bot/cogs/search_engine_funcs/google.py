@@ -12,7 +12,7 @@ from discord.ext import commands
 from functions.multi_page import PageTurnView
 
 if TYPE_CHECKING:
-    from bot.studybot import StudyBot
+    from studybot import StudyBot
 
 
 class GoogleSearch(Search):

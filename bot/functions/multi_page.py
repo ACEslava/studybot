@@ -3,7 +3,7 @@ from typing import List
 import discord
 from discord.ext import commands
 
-from bot.studybot import StudyBot
+from studybot import StudyBot
 
 
 class PageTurnView(discord.ui.View):
