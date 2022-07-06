@@ -270,6 +270,7 @@ class GoogleSearch(Search):
             t0 = time.time()
 
             # checks if image is in search query
+            self.bot.logger.debug("Checking if user searched for image")
             if bool(re.search("image", self.query.lower())):
                 has_found_image = True
             else:
@@ -277,6 +278,7 @@ class GoogleSearch(Search):
 
             # gets the webscraped html of the google search
             session: aiohttp.ClientSession = self.bot.session
+            self.bot.logger.debug("Retrieving google html")
             async with session.get(
                 self.url, headers={"User-Agent": "python-requests/2.25.1"}
             ) as data:
@@ -297,12 +299,17 @@ class GoogleSearch(Search):
             # if the search returns results
             if soup.find("div", {"id": "main"}) is not None:
                 embeds = []
+                self.bot.logger.debug("Cleaning results")
                 filtered_results = result_cleanup(soup)
 
                 # checks if user searched specifically for images, else use text embed
                 if has_found_image:
+                    self.bot.logger.debug(
+                        "User searched for images, parsing image results"
+                    )
                     embeds = await image_results(filtered_results)
                 else:
+                    self.bot.logger.debug("Parsing text results")
                     embeds = [
                         embed
                         for embed in map(text_embed, filtered_results)
@@ -322,15 +329,16 @@ class GoogleSearch(Search):
                     for i, e in enumerate(embeds)
                 ]
 
-                t1 = time.time()
                 self.bot.logger.debug(
-                    f"Search returned {len(embeds)} results in {round(t1-t0, 5)} sec"
+                    f"Search returned {len(embeds)} "
+                    + f"results in {round(time.time()-t0, 5)} sec"
                 )
                 current_page = 0
+                self.bot.logger.debug("Sending results")
                 await self.message.edit(
                     content="",
                     embed=embeds[current_page % len(embeds)],
-                    view=PageTurnView(self.ctx, embeds, self.message, 60.0),
+                    view=PageTurnView(self.bot, self.ctx, embeds, self.message, 60.0),
                 )
                 return
 
@@ -347,7 +355,9 @@ class GoogleSearch(Search):
                 embed.set_footer(text=f"Requested by {self.ctx.author}")
 
                 await self.message.edit(
-                    content="", embed=embed, view=PageTurnView(self.ctx, embeds)
+                    content="",
+                    embed=embed,
+                    view=PageTurnView(self.bot, self.ctx, embeds),
                 )
 
         except Exception as e:

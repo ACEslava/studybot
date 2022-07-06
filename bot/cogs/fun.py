@@ -1,4 +1,5 @@
 import random
+import time
 from typing import TYPE_CHECKING
 
 import aiohttp
@@ -22,13 +23,19 @@ class Fun(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.default)
     async def cat(self, ctx: commands.Context):
         # gets the webscraped html of the google search
+        self.bot.logger.debug("Sending API request")
+        t0 = time.time()
         session: aiohttp.ClientSession = self.bot.session
         async with session.get("https://api.thecatapi.com/v1/images/search") as data:
             json = await data.json()
+        self.bot.logger.debug(f"API Response in {round(time.time()-t0, 5)} sec")
 
+        self.bot.logger.debug("Creating Embed")
         embed = discord.Embed()
         embed.set_image(url=json[0]["url"])
         embed.set_footer(text=f"Requested by {ctx.author}")
+
+        self.bot.logger.debug("Sending Embed")
         await ctx.send(embed=embed)
         self.bot.logger.info(f"Sent image: {json[0]['url']}")
         return
@@ -40,13 +47,19 @@ class Fun(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.default)
     async def dog(self, ctx: commands.Context):
         # gets the webscraped html of the google search
+        t0 = time.time()
+        self.bot.logger.debug("Sending API request")
         session: aiohttp.ClientSession = self.bot.session
         async with session.get("https://dog.ceo/api/breeds/image/random") as data:
             json = await data.json()
+        self.bot.logger.debug(f"API Response in {round(time.time()-t0, 5)} sec")
 
+        self.bot.logger.debug("Creating Embed")
         embed = discord.Embed()
         embed.set_image(url=json["message"])
         embed.set_footer(text=f"Requested by {ctx.author}")
+
+        self.bot.logger.debug("Sending Embed")
         await ctx.send(embed=embed)
         self.bot.logger.info(f"Sent image: {json['message']}")
         return
@@ -91,33 +104,65 @@ class Fun(commands.Cog):
     @commands.is_nsfw()
     @commands.cooldown(1, 10, commands.BucketType.default)
     async def boobs(self, ctx: commands.Context):
+        # adds repeat checker if doesn't exist
+        try:
+            getattr(self.bot, "boobs_sentPosts")
+            self.bot.boobs_sentPosts = {
+                k: v
+                for k, v in self.bot.boobs_sentPosts.items()
+                if time.time() - v < 86400
+            }
+
+        except AttributeError:
+            self.bot.boobs_sentPosts = {}
+
         urls = (
             "https://www.reddit.com/r/boobs.json?sort=new&limit=100",
             "https://www.reddit.com/r/boobies.json?sort=new&limit=100",
             "https://www.reddit.com/r/bustypetite.json?sort=new&limit=100",
         )
+
         # Queries reddit API
-        session: aiohttp.ClientSession = self.bot.session
-        async with session.get(random.choice(urls)) as data:
-            json = await data.json()
+        img = ""
+        self.bot.logger.debug("Sending API request")
 
-        # Finds random image post
-        while 1:
-            img_data: dict = random.choice(json["data"]["children"])["data"]
-            if "url_overridden_by_dest" in img_data.keys():
-                if any(
-                    url in img_data["url_overridden_by_dest"]
-                    for url in ("i.imgur", "i.redd.it")
-                ):
-                    img: str = img_data["url_overridden_by_dest"]
-                    break
+        while img == "":
+            t0 = time.time()
+            session: aiohttp.ClientSession = self.bot.session
+            async with session.get(random.choice(urls)) as data:
+                json = await data.json()
+            self.bot.logger.debug(f"API Response in {round(time.time()-t0, 5)} sec")
 
+            # Finds random image post, limited to 3 retries
+            self.bot.logger.debug("Getting random post from response")
+            for _ in range(3):
+                img_data: dict = random.choice(json["data"]["children"])["data"]
+                if "url_overridden_by_dest" in img_data.keys():
+                    if (
+                        any(  # permitted domains
+                            url in img_data["url_overridden_by_dest"]
+                            for url in ("i.imgur", "i.redd.it")
+                        )
+                        and not any(  # blocked filetypes
+                            url in img_data["url_overridden_by_dest"]
+                            for url in (".webp", ".gifv")
+                        )
+                        # prev. sent posts
+                        and img_data["id"] not in self.bot.boobs_sentPosts.keys()
+                    ):
+                        img = img_data["url_overridden_by_dest"]
+                        self.bot.boobs_sentPosts[img_data["id"]] = time.time()
+                        break
+
+        self.bot.logger.debug("Creating Embed")
         embed = discord.Embed(
             title=img_data["title"],
             url=f"https://www.reddit.com{img_data['permalink']}",
         )
+
         embed.set_image(url=img)
         embed.set_footer(text=f"Requested by {ctx.author}")
+        self.bot.logger.debug("Sending Embed")
         await ctx.send(embed=embed)
         self.bot.logger.info(f"Sent image: {img}")
         return

@@ -3,11 +3,15 @@ from typing import List
 import discord
 from discord.ext import commands
 
+from bot.studybot import StudyBot
+
 
 class PageTurnView(discord.ui.View):
     """discord.ui.View subclass for page-turn functionality between embeds
     Parameters
     ----------
+    bot : StudyBot
+        Bot instance
     ctx : discord.ext.commands.Context
         Discord's command context
     embed_list: List[discord.Embed]
@@ -20,11 +24,13 @@ class PageTurnView(discord.ui.View):
 
     def __init__(
         self,
+        bot: StudyBot,
         ctx: commands.Context,
         embed_list: List[discord.Embed],
         message: discord.Message,
         timeout=60.0,
     ):
+        self.bot = bot
         self.ctx = ctx
         self.embed_list = embed_list
         self.current_page = 0
@@ -50,6 +56,7 @@ class PageTurnView(discord.ui.View):
     async def delete_callback(self, interaction: discord.Interaction, _):
         await interaction.message.delete()
         # Post delete cleanup
+        self.bot.logger.debug("User deleted message")
         super().clear_items()
         super().stop()
 

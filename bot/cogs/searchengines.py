@@ -90,6 +90,7 @@ class SearchEngines(commands.Cog):
                 self.bot.logger.info(
                     str(ctx.author) + " searched for: " + userquery[:233]
                 )
+                self.bot.logger.debug("Sending loading message")
                 message = await ctx.send(self.bot.loading_message())
 
                 await searchObject(
@@ -99,12 +100,12 @@ class SearchEngines(commands.Cog):
                     args=search_args,
                     query=userquery,
                 )()
-
+                self.bot.logger.debug("Waiting for message edit")
                 messageEdit = await self.bot.wait_for(
                     "message_edit",
                     check=lambda _, m: m.author == ctx.author and m == ctx.message,
                 )
-
+                self.bot.logger.debug("Message edit detected, looping search")
                 await message.delete()
 
                 userquery = messageEdit[1].content.replace(
@@ -113,6 +114,7 @@ class SearchEngines(commands.Cog):
                 continue
 
             except TimeoutError:  # after a minute, everything cancels
+                self.bot.logger.debug("Wait cancelled")
                 await message.clear_reactions()
                 continueLoop = False
                 return
