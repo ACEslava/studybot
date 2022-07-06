@@ -1,10 +1,11 @@
+import os
+import time
 from typing import TYPE_CHECKING
 
+import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    import discord
-
     from studybot import StudyBot
 
 
@@ -21,6 +22,12 @@ class OnHandling(commands.Cog):
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
         self.bot.logger.info(str(ctx.author) + " used " + ctx.command.name)
+
+        embed = discord.Embed(title=ctx.command.name, description=ctx.message.content)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed.set_footer(text=time.asctime())
+        if os.getenv("DEBUG_MODE") != "true":
+            await self.bot.logging_channel.send(embed=embed)
 
 
 async def setup(bot: "StudyBot") -> None:

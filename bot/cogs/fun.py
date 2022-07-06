@@ -1,6 +1,6 @@
 import random
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 import aiohttp
 import discord
@@ -67,6 +67,7 @@ class Fun(commands.Cog):
     @commands.command(
         name="8ball",
         description="Answers your deepest yes/no questions",
+        aliases=["eightball"],
     )
     @commands.cooldown(1, 10, commands.BucketType.default)
     async def eightball(self, ctx: commands.Context):
@@ -92,14 +93,18 @@ class Fun(commands.Cog):
             "Outlook not so good.",
             "Very doubtful.",
         )
-        embed = discord.Embed(title="8ball", description=random.choice(responses))
-        embed.set_footer(f"Requested by {ctx.author}")
-        ctx.send(embed=embed)
+        embed = discord.Embed(
+            title="8ball", description=responses[random.randint(0, 19)]
+        )
+        embed.set_footer(text=f"Requested by {ctx.author}")
+        await ctx.send(embed=embed)
         return
 
     @commands.command(
         name="boobs",
         description="Sends a random picture of boobs (NSFW channels only)",
+        help="Sourced from r/boobs, boobies, bustypetite, tittydrop",
+        aliases=["boob", "boobies"],
     )
     @commands.is_nsfw()
     @commands.cooldown(1, 10, commands.BucketType.default)
@@ -117,55 +122,85 @@ class Fun(commands.Cog):
             self.bot.boobs_sentPosts = {}
 
         urls = (
-            "https://www.reddit.com/r/boobs.json?sort=new&limit=100",
-            "https://www.reddit.com/r/boobies.json?sort=new&limit=100",
-            "https://www.reddit.com/r/bustypetite.json?sort=new&limit=100",
+            "boobs",
+            "boobies",
+            "bustypetite",
+            "tittydrop",
         )
+        post_id = await self.__random_reddit_post(urls, ctx)
+        self.bot.boobs_sentPosts[post_id] = time.time()
+        return
 
+    async def __random_reddit_post(
+        self, subreddit: Tuple[str], ctx: commands.Context
+    ) -> str:
+        """_summary_
+
+        Parameters
+        ----------
+        subreddit : Tuple[str]
+            Tuple of subreddits (no r/)
+        ctx : commands.Context
+            Command context
+
+        Returns
+        -------
+        id : str
+            Reddit post id
+        """
         # Queries reddit API
         img = ""
         self.bot.logger.debug("Sending API request")
 
         while img == "":
             t0 = time.time()
+            url = (
+                "https://www.reddit.com/r/"
+                + subreddit[random.randint(0, len(subreddit) - 1)]
+                + ".json?sort=new&limit=100"
+            )
             session: aiohttp.ClientSession = self.bot.session
-            async with session.get(random.choice(urls)) as data:
-                json = await data.json()
+            async with session.get(url) as data:
+                posts = (await data.json())["data"]["children"]
             self.bot.logger.debug(f"API Response in {round(time.time()-t0, 5)} sec")
 
-            # Finds random image post, limited to 3 retries
+            # Finds random image post, limited to 10 retries
             self.bot.logger.debug("Getting random post from response")
-            for _ in range(3):
-                img_data: dict = random.choice(json["data"]["children"])["data"]
+            for _ in range(10):
+                img_data: dict = posts[random.randint(0, len(posts) - 1)]["data"]
                 if "url_overridden_by_dest" in img_data.keys():
                     if (
                         any(  # permitted domains
-                            url in img_data["url_overridden_by_dest"]
-                            for url in ("i.imgur", "i.redd.it")
-                        )
-                        and not any(  # blocked filetypes
-                            url in img_data["url_overridden_by_dest"]
-                            for url in (".webp", ".gifv")
+                            url in img_data["url"] for url in ("i.imgur", "i.redd.it")
                         )
                         # prev. sent posts
                         and img_data["id"] not in self.bot.boobs_sentPosts.keys()
                     ):
-                        img = img_data["url_overridden_by_dest"]
-                        self.bot.boobs_sentPosts[img_data["id"]] = time.time()
+                        img = img_data["url"]
                         break
 
-        self.bot.logger.debug("Creating Embed")
-        embed = discord.Embed(
-            title=img_data["title"],
-            url=f"https://www.reddit.com{img_data['permalink']}",
-        )
+        # Does not embed gif for compatibility
+        if ".gifv" in img:
+            await ctx.send(
+                content="https://www.reddit.com/r/"
+                + f"{img_data['subreddit']}/comments/{img_data['id']}"
+                + "\n"
+                + img
+            )
+        else:
+            self.bot.logger.debug("Creating Embed")
+            embed = discord.Embed(
+                title=img_data["title"],
+                url="https://www.reddit.com/r/"
+                + f"{img_data['subreddit']}/comments/{img_data['id']}",
+            )
 
-        embed.set_image(url=img)
-        embed.set_footer(text=f"Requested by {ctx.author}")
-        self.bot.logger.debug("Sending Embed")
-        await ctx.send(embed=embed)
+            embed.set_image(url=img)
+            embed.set_footer(text=f"Requested by {ctx.author}")
+            self.bot.logger.debug("Sending Embed")
+            await ctx.send(embed=embed)
         self.bot.logger.info(f"Sent image: {img}")
-        return
+        return img_data["id"]
 
 
 async def setup(bot: "StudyBot") -> None:

@@ -155,6 +155,9 @@ class StudyBot(commands.Bot):
 
             self.logger.debug("Syncing slash commands")
 
+        # Set logging channel
+        self.logging_channel = self.get_channel(861500151070457857)
+
         # Log ready event
         self.logger.info("-" * 15)
         self.logger.info("Bot successfully loaded")
