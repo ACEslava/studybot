@@ -111,28 +111,67 @@ class Fun(commands.Cog):
     async def boobs(self, ctx: commands.Context):
         # ensures posts are not repeated within 24hrs
         try:
-            getattr(self.bot, "boobs_sentPosts")
-            self.bot.boobs_sentPosts = {
+            getattr(self.bot, "nsfw_sentPosts")
+            self.bot.nsfw_sentPosts = {
                 k: v
-                for k, v in self.bot.boobs_sentPosts.items()
+                for k, v in self.bot.nsfw_sentPosts.items()
                 if time.time() - v < 86400
             }
-
         except AttributeError:
-            self.bot.boobs_sentPosts = {}
+            self.bot.nsfw_sentPosts = {}
 
+        # list of subreddits to search
         urls = (
             "boobs",
             "boobies",
             "bustypetite",
             "tittydrop",
         )
-        post_id = await self.__random_reddit_post(urls, ctx)
-        self.bot.boobs_sentPosts[post_id] = time.time()
+
+        # search handler
+        post_id = await self.__random_reddit_post(
+            urls, ctx, self.bot.nsfw_sentPosts.keys()
+        )
+        self.bot.nsfw_sentPosts[post_id] = time.time()
+        return
+
+    @commands.command(
+        name="dick",
+        description="Sends a random picture of boobs (NSFW channels only)",
+        help="Sourced from r/penis, cock, hugedicktinychick, massivecock",
+        aliases=["cock", "pp"],
+    )
+    @commands.is_nsfw()
+    @commands.cooldown(1, 10, commands.BucketType.default)
+    async def dick(self, ctx: commands.Context):
+        # ensures posts are not repeated within 24hrs
+        try:
+            getattr(self.bot, "nsfw_sentPosts")
+            self.bot.nsfw_sentPosts = {
+                k: v
+                for k, v in self.bot.nsfw_sentPosts.items()
+                if time.time() - v < 86400
+            }
+        except AttributeError:
+            self.bot.nsfw_sentPosts = {}
+
+        # list of subreddits to search
+        urls = (
+            "penis",
+            "cock",
+            "hugedicktinychick",
+            "massivecock",
+        )
+
+        # search handler
+        post_id = await self.__random_reddit_post(
+            urls, ctx, self.bot.nsfw_sentPosts.keys()
+        )
+        self.bot.nsfw_sentPosts[post_id] = time.time()
         return
 
     async def __random_reddit_post(
-        self, subreddit: Tuple[str], ctx: commands.Context
+        self, subreddit: Tuple[str], ctx: commands.Context, sent_posts: list
     ) -> str:
         """_summary_
 
@@ -172,17 +211,22 @@ class Fun(commands.Cog):
             # Finds random image post, limited to 10 retries
             self.bot.logger.debug("Getting random post from response")
             for _ in range(10):
-                img_data: dict = posts[random.randint(0, len(posts) - 1)]["data"]
-                if (
-                    # is img post
-                    "url_overridden_by_dest" in img_data.keys()
-                    # permitted domains
-                    and any(url in img_data["url"] for url in ("i.imgur", "i.redd.it"))
-                    # prev. sent posts
-                    and img_data["id"] not in self.bot.boobs_sentPosts.keys()
-                ):
-                    img = img_data["url"]
-                    break
+                try:
+                    img_data: dict = posts[random.randint(0, len(posts) - 1)]["data"]
+                    if (
+                        # is img post
+                        "url_overridden_by_dest" in img_data.keys()
+                        # permitted domains
+                        and any(
+                            url in img_data["url"] for url in ("i.imgur", "i.redd.it")
+                        )
+                        # prev. sent posts
+                        and img_data["id"] not in sent_posts
+                    ):
+                        img = img_data["url"]
+                        break
+                except Exception:
+                    continue
 
         # Does not embed gif for compatibility
         if ".gifv" in img:

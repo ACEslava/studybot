@@ -18,6 +18,8 @@ Install dependencies
 python -m pip install -r requirements.txt
 ```
 
+Create .env (an example.env has been provided)
+
 Run the bot
 ```
 python -m bot/launcher.py

@@ -22,6 +22,7 @@ application_id = (
     if os.getenv("DEBUG_MODE") == "true"
     else os.getenv("APPLICATION_ID")
 )
+logging_channel_id = int(os.getenv("LOG_CHANNEL_ID"))
 
 
 class UserError(Exception):
@@ -156,7 +157,7 @@ class StudyBot(commands.Bot):
             self.logger.debug("Syncing slash commands")
 
         # Set logging channel
-        self.logging_channel = self.get_channel(861500151070457857)
+        self.logging_channel = self.get_channel(logging_channel_id)
 
         # Log ready event
         self.logger.info("-" * 15)
