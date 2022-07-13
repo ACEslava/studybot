@@ -50,13 +50,13 @@ Onhandling should contain code related to [events](https://discordpy.readthedocs
 
 ### SearchEngines
 
-[onhandling.py](../bot/cogs/searchengines.py)
+[searchengines.py](../bot/cogs/searchengines.py)
 
 SearchEngines should contain any search-related functionality (aka the original SearchIO commands).
 
 ### Fun
 
-[onhandling.py](../bot/cogs/fun.py)
+[fun.py](../bot/cogs/fun.py)
 
 Fun should contain miscellaneous, fun commands that wouldn't be relevant in other cogs.
 
