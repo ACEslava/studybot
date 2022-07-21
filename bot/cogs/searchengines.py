@@ -106,6 +106,7 @@ class SearchEngines(commands.Cog):
                 messageEdit = await self.bot.wait_for(
                     "message_edit",
                     check=lambda _, m: m.author == ctx.author and m == ctx.message,
+                    timeout=60,
                 )
                 self.bot.logger.debug("Message edit detected, looping search")
                 await message.delete()
@@ -115,11 +116,10 @@ class SearchEngines(commands.Cog):
                 )  # finds the new user query
                 continue
 
-            except TimeoutError:  # after a minute, everything cancels
-                self.bot.logger.debug("Wait cancelled")
-                await message.clear_reactions()
+            except asyncio.TimeoutError:
                 continueLoop = False
-                return
+                self.bot.logger.debug("Waiting cancelled")
+                pass
 
             except Exception as e:
                 raise e

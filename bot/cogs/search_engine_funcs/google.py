@@ -1,3 +1,4 @@
+import asyncio
 import re
 import time
 from typing import TYPE_CHECKING, List
@@ -333,12 +334,12 @@ class GoogleSearch(Search):
                     f"Search returned {len(embeds)} "
                     + f"results in {round(time.time()-t0, 5)} sec"
                 )
-                current_page = 0
                 await self.message.edit(
                     content="",
-                    embed=embeds[current_page % len(embeds)],
-                    view=PageTurnView(self.bot, self.ctx, embeds, self.message, 60.0),
+                    embed=embeds[0],
+                    view=PageTurnView(self.bot, self.ctx, embeds, self.message, 60),
                 )
+
                 return
 
             else:
@@ -356,8 +357,14 @@ class GoogleSearch(Search):
                 await self.message.edit(
                     content="",
                     embed=embed,
-                    view=PageTurnView(self.bot, self.ctx, embeds),
+                    view=PageTurnView(self.bot, self.ctx, embeds, self.message, 60.0),
                 )
+
+                await asyncio.sleep(2)
+                raise TimeoutError
+
+        except TimeoutError:
+            raise
 
         except Exception as e:
             await self.message.delete()

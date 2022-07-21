@@ -19,6 +19,7 @@ class Fun(commands.Cog):
     @commands.command(
         name="cat",
         description="Sends a random photo of a cat, what more can you ask for",
+        aliases=["pussy"],
     )
     @commands.cooldown(1, 10, commands.BucketType.default)
     async def cat(self, ctx: commands.Context):
@@ -137,7 +138,7 @@ class Fun(commands.Cog):
 
     @commands.command(
         name="dick",
-        description="Sends a random picture of boobs (NSFW channels only)",
+        description="Sends a random picture of dicks (NSFW channels only)",
         help="Sourced from r/penis, cock, hugedicktinychick, massivecock",
         aliases=["cock", "pp"],
     )

@@ -20,6 +20,10 @@ class PageTurnView(discord.ui.View):
         The message containing the buttons.
     timeout: float
         (Optional) Float indicating seconds before timeout. (Default=60.0)
+
+    Raises
+    ----------
+    TimeoutError: on timeout expiry
     """
 
     def __init__(
@@ -54,7 +58,6 @@ class PageTurnView(discord.ui.View):
             await self.message.edit(view=self)
         except Exception:
             pass
-
         super().stop()
 
     # Delete result
