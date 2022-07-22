@@ -17,12 +17,13 @@ class OnHandling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: "discord.Message"):
-        if message.content.lower() == "hello friends":
-            await message.channel.send(f"Hello <@{message.author.id}> :D")
-            self.bot.logger.info(f"Said hello to {message.author}")
+        if not message.author.bot:
+            if message.content.lower() == "hello friends":
+                await message.channel.send(f"Hello <@{message.author.id}> :D")
+                self.bot.logger.info(f"Said hello to {message.author}")
 
-        elif "intuit" in message.content.lower():
-            await message.channel.send(f"<@{message.author.id}> intuit deez nuts")
+            elif "intuit" in message.content.lower():
+                await message.channel.send(f"<@{message.author.id}> intuit deez nuts")
 
     @commands.Cog.listener()
     async def on_command_completion(self, ctx: commands.Context):
