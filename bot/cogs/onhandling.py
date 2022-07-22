@@ -22,7 +22,16 @@ class OnHandling(commands.Cog):
                 await message.channel.send(f"Hello <@{message.author.id}> :D")
                 self.bot.logger.info(f"Said hello to {message.author}")
 
-            elif "intuit" in message.content.lower():
+            elif any(
+                [
+                    s in message.content.lower()
+                    for s in (
+                        "intuit",
+                        "in2it",
+                        "intooit",
+                    )
+                ]
+            ):
                 await message.channel.send(f"<@{message.author.id}> intuit deez nuts")
 
     @commands.Cog.listener()

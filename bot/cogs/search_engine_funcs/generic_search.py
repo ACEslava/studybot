@@ -8,6 +8,17 @@ if TYPE_CHECKING:
 
 
 class Search:
+    """Internal base class for all search functions
+
+    When called, execute search function
+
+    return None
+
+    raise Search.NoResults if no results are found
+
+    raise asyncio.Timeout when any user-facing timeout expires
+    """
+
     def __init__(
         self,
         bot: "StudyBot",
@@ -22,3 +33,6 @@ class Search:
         self.message = message
         self.args = args if args is not None else []
         self.query = query
+
+    class NoResults(Exception):
+        pass

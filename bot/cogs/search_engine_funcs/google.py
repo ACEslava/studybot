@@ -3,7 +3,6 @@ import re
 import time
 from typing import TYPE_CHECKING, List
 
-import aiohttp
 import cchardet
 import discord
 import validators
@@ -49,6 +48,14 @@ class GoogleSearch(Search):
         return
 
     async def __call__(self) -> None:
+        """Performs Google search
+
+        Raises
+        ----------
+        Search.NoResults : when no results are found
+        asyncio.TimeoutError : when any interaction expires
+        """
+
         def link_unicode_parse(link: str) -> str:
             """Parses unicode codes into characters
 
@@ -239,22 +246,38 @@ class GoogleSearch(Search):
                 finally:
                     return result_embed
 
+            async def url_validation(url: str) -> bool:
+                """Validates if provided URL links to an image
+
+                Parameters
+                ----------
+                url : str
+                    Unparsed URL of image
+
+                Returns
+                -------
+                bool
+                    True if valid URL
+                """
+                try:
+                    url = image_url_parser(url)
+                    async with self.bot.session.head(
+                        url, allow_redirects=False
+                    ) as resp:
+                        return resp.status < 300 and validators.url(url)
+                except Exception:
+                    return False
+
             # searches for the "images for" search result div
             for result in results:
                 if "Images" in result.strings:
                     images = result.findAll("img", recursive=True)
-
+                    tasks = [asyncio.create_task(url_validation(url)) for url in images]
                     # checks if image wont embed properly
-                    bad_urls = [
-                        image_url_parser(url)
-                        for url in images
-                        if not validators.url(image_url_parser(url))
+                    good_url_mask = await asyncio.gather(*tasks)
+                    images = [
+                        i for (i, v) in zip([url for url in images], good_url_mask) if v
                     ]
-
-                    if len(bad_urls) > 0:
-                        images = [
-                            img for idx, img in enumerate(images) if idx not in bad_urls
-                        ]
 
                     # creates embed list
                     embeds = [
@@ -263,8 +286,6 @@ class GoogleSearch(Search):
                         if embed.description is not (None or "")
                     ]
 
-                    if len(embeds) > 0:
-                        del embeds[-1]
                     return embeds
 
         try:
@@ -278,9 +299,8 @@ class GoogleSearch(Search):
                 has_found_image = False
 
             # gets the webscraped html of the google search
-            session: aiohttp.ClientSession = self.bot.session
             self.bot.logger.debug("Retrieving google html")
-            async with session.get(
+            async with self.bot.session.get(
                 self.url, headers={"User-Agent": "python-requests/2.25.1"}
             ) as data:
                 html = await data.text()
@@ -298,72 +318,56 @@ class GoogleSearch(Search):
             #     file.write(soup.prettify())
 
             # if the search returns results
-            if soup.find("div", {"id": "main"}) is not None:
-                embeds = []
-                self.bot.logger.debug("Cleaning results")
-                filtered_results = result_cleanup(soup)
+            if soup.find("div", {"id": "main"}) is None:
+                self.bot.logger.debug("Search returned 0 results")
+                raise Search.NoResults
+            embeds = []
+            self.bot.logger.debug("Cleaning results")
+            filtered_results = result_cleanup(soup)
 
-                # checks if user searched specifically for images, else use text embed
-                if has_found_image:
-                    self.bot.logger.debug(
-                        "User searched for images, parsing image results"
-                    )
-                    embeds = await image_results(filtered_results)
-                else:
-                    self.bot.logger.debug("Parsing text results")
-                    embeds = [
-                        embed
-                        for embed in map(text_embed, filtered_results)
-                        if embed.description is not (None or "")
-                    ]
-
-                # adds the page numbering footer to the embeds
+            # checks if user searched specifically for images, else use text embed
+            if has_found_image:
+                self.bot.logger.debug("User searched for images, parsing image results")
+                embeds = await image_results(filtered_results)
+            else:
+                self.bot.logger.debug("Parsing text results")
                 embeds = [
-                    e.set_footer(
-                        text=(
-                            "Page "
-                            + f"{i+1}/{len(embeds)}"
-                            + "\nRequested by: "
-                            + f"{str(self.ctx.author)}"
-                        )
-                    )
-                    for i, e in enumerate(embeds)
+                    embed
+                    for embed in map(text_embed, filtered_results)
+                    if embed.description is not (None or "")
                 ]
 
-                self.bot.logger.debug(
-                    f"Search returned {len(embeds)} "
-                    + f"results in {round(time.time()-t0, 5)} sec"
+            # adds the page numbering footer to the embeds
+            embeds = [
+                e.set_footer(
+                    text=(
+                        "Page "
+                        + f"{i+1}/{len(embeds)}"
+                        + "\nRequested by: "
+                        + f"{str(self.ctx.author)}"
+                    )
                 )
-                await self.message.edit(
-                    content="",
-                    embed=embeds[0],
-                    view=PageTurnView(self.bot, self.ctx, embeds, self.message, 60),
-                )
+                for i, e in enumerate(embeds)
+            ]
+            if len(embeds) == 0:
+                raise Search.NoResults
 
-                return
+            self.bot.logger.debug(
+                f"Search returned {len(embeds)} "
+                + f"results in {round(time.time()-t0, 5)} sec"
+            )
 
-            else:
-                self.bot.logger.debug("Search returned 0 results")
-                embed = discord.Embed(
-                    title=(
-                        "Search results for: "
-                        + f'{self.query[:233]}{"..." if len(self.query) > 233 else ""}'
-                    ),
-                    description="No results found. Maybe try another search term.",
-                )
+            view = PageTurnView(self.bot, self.ctx, embeds, self.message, 60)
+            await self.message.edit(
+                content="",
+                embed=embeds[0],
+                view=view,
+            )
 
-                embed.set_footer(text=f"Requested by {self.ctx.author}")
+            await view.wait()
+            raise asyncio.TimeoutError
 
-                await self.message.edit(
-                    content="",
-                    embed=embed,
-                    view=PageTurnView(self.bot, self.ctx, embeds, self.message, 60.0),
-                )
-
-                await asyncio.sleep(2)
-                raise TimeoutError
-
-        except TimeoutError:
+        except (asyncio.TimeoutError, Search.NoResults):
             raise
 
         except Exception as e:

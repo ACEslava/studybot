@@ -94,33 +94,72 @@ class SearchEngines(commands.Cog):
                     str(ctx.author) + " searched for: " + userquery[:233]
                 )
 
-                await searchObject(
-                    self.bot,
-                    ctx,
-                    message,
-                    search_args,
-                    userquery,
-                )()
-
                 self.bot.logger.debug("Waiting for message edit")
-                messageEdit = await self.bot.wait_for(
-                    "message_edit",
-                    check=lambda _, m: m.author == ctx.author and m == ctx.message,
-                    timeout=60,
+                search_task = asyncio.create_task(
+                    searchObject(
+                        self.bot,
+                        ctx,
+                        message,
+                        search_args,
+                        userquery,
+                    )(),
+                    name="finished_interaction",
                 )
-                self.bot.logger.debug("Message edit detected, looping search")
-                await message.delete()
+                message_edit = asyncio.create_task(
+                    self.bot.wait_for(
+                        "message_edit",
+                        check=lambda _, m: m.author == ctx.author and m == ctx.message,
+                        timeout=30,
+                    ),
+                    name="message_edited",
+                )
 
-                userquery = messageEdit[1].content.replace(
-                    f"&{ctx.invoked_with} ", ""
-                )  # finds the new user query
-                continue
+                done, _ = await asyncio.wait(
+                    [search_task, message_edit], return_when=asyncio.FIRST_COMPLETED
+                )
+
+                # Handles any exception raised by tasks
+                for t in done:
+                    exc = t.exception()
+                    if isinstance(exc, Exception):
+                        raise exc
+
+                # Checks if user edited message
+                if message_edit in done:
+                    self.bot.logger.debug("Message edit detected, looping search")
+                    await message.delete()
+
+                    userquery = message_edit.result()[1].content.replace(
+                        f"&{ctx.invoked_with} ", ""
+                    )  # finds the new user query
+                    continue
 
             except asyncio.TimeoutError:
                 continueLoop = False
                 self.bot.logger.debug("Waiting cancelled")
                 pass
 
+            except Search.NoResults:
+                if "image" in userquery:
+                    userquery = (
+                        message_edit.result()[1].content.replace("image", "").strip()
+                    )
+
+                else:
+                    embed = discord.Embed(
+                        title=(
+                            "Search results for: "
+                            + f"{self.query[:233]}"
+                            + f'{"..." if len(self.query) > 233 else ""}'
+                        ),
+                        description="No results found. "
+                        + "Edit your query with another search term.",
+                    )
+
+                    embed.set_footer(text=f"Requested by {self.ctx.author}")
+
+                    await self.message.edit(content="", embed=embed)
+                continue
             except Exception as e:
                 raise e
         return

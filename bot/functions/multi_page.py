@@ -59,6 +59,7 @@ class PageTurnView(discord.ui.View):
         except Exception:
             pass
         super().stop()
+        return
 
     # Delete result
     @discord.ui.button(emoji="🗑️", style=discord.ButtonStyle.red)
@@ -68,6 +69,7 @@ class PageTurnView(discord.ui.View):
         self.bot.logger.debug("User deleted message")
         super().clear_items()
         super().stop()
+        return
 
     # Prev page
     @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.gray)
