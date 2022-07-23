@@ -52,9 +52,9 @@ class OnHandling(commands.Cog):
                     raw_quant = parser.parse(message.content.lower())
 
                     # Parse quantity into an object
-                    parsed_quant: pint.Quantity = raw_quant[
-                        0
-                    ].value * pint.UnitRegistry()(raw_quant[0].unit.name)
+                    parsed_quant: pint.Quantity = pint.UnitRegistry()(
+                        raw_quant[0].surface
+                    )
 
                     # Convert to imperial/metric equivalent
                     converted_quant = None
