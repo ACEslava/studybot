@@ -120,6 +120,9 @@ class StudyBot(commands.Bot):
         # Add bot-account check
         self.add_check(lambda ctx: not ctx.author.bot)
 
+        # Add Reddit sent post cache
+        self.reddit_sentPosts = {}
+
     async def setup_hook(self) -> None:
         # Load cogs
         for cog in initial_cogs:
