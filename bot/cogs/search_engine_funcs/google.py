@@ -337,6 +337,9 @@ class GoogleSearch(Search):
                     if embed.description is not (None or "")
                 ]
 
+            if embeds is None or len(embeds) == 0:
+                raise Search.NoResults
+
             # adds the page numbering footer to the embeds
             embeds = [
                 e.set_footer(
@@ -349,8 +352,6 @@ class GoogleSearch(Search):
                 )
                 for i, e in enumerate(embeds)
             ]
-            if len(embeds) == 0:
-                raise Search.NoResults
 
             self.bot.logger.debug(
                 f"Search returned {len(embeds)} "

@@ -1,8 +1,6 @@
-import asyncio
 import os
 import random
 import time
-import traceback
 from typing import TYPE_CHECKING
 
 import discord
@@ -100,50 +98,6 @@ class OnHandling(commands.Cog):
             embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
             embed.set_footer(text=time.asctime())
             await self.bot.logging_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
-        # If user made an error in their command
-        if isinstance(e, self.bot.UserError):
-            await ctx.send(embed=discord.Embed(description=e.reason))
-            return
-
-        # If certain errors are raised, ignore it
-        elif isinstance(
-            e,
-            (
-                TimeoutError,
-                asyncio.TimeoutError,
-                commands.errors.CommandNotFound,
-                commands.errors.CheckFailure,
-            ),
-        ):
-            return
-
-        # Cooldown
-        elif isinstance(e, commands.errors.CommandOnCooldown):
-            await ctx.send(
-                embed=discord.Embed(
-                    description="Command on cooldown. Wait "
-                    + f"{round(e.retry_after, 2)} sec"
-                )
-            )
-            self.bot.logger.info("Command ratelimited")
-            return
-        self.bot.logger.error(e, exc_info=True)
-
-        if ctx.author.id == self.bot.owner_id:
-            await ctx.send(f"```{e}{chr(10)}{traceback.format_exc()}```")
-        else:
-            err_embed = discord.Embed(
-                title=":(",
-                description=(
-                    "An unknown error has occurred,"
-                    + " please try a different command."
-                ),
-            )
-            await ctx.send(embed=err_embed)
-            return
 
 
 async def setup(bot: "StudyBot") -> None:

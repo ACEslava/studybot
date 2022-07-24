@@ -84,12 +84,11 @@ class SearchEngines(commands.Cog):
         # endregion
 
         # allows users to edit their search query after results are returned
+        self.bot.logger.debug("Sending loading message")
+        message = await ctx.send(self.bot.loading_message())
         continueLoop = True
         while continueLoop:
             try:
-                self.bot.logger.debug("Sending loading message")
-                message = await ctx.send(self.bot.loading_message())
-
                 self.bot.logger.info(
                     str(ctx.author) + " searched for: " + userquery[:233]
                 )
@@ -134,16 +133,14 @@ class SearchEngines(commands.Cog):
                     )  # finds the new user query
                     continue
 
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, asyncio.CancelledError):
                 continueLoop = False
                 self.bot.logger.debug("Waiting cancelled")
                 pass
 
             except Search.NoResults:
                 if "image" in userquery:
-                    userquery = (
-                        message_edit.result()[1].content.replace("image", "").strip()
-                    )
+                    userquery = userquery.replace("image", "").strip()
 
                 else:
                     embed = discord.Embed(
@@ -160,6 +157,7 @@ class SearchEngines(commands.Cog):
 
                     await self.message.edit(content="", embed=embed)
                 continue
+
             except Exception as e:
                 raise e
         return

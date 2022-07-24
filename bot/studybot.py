@@ -1,7 +1,9 @@
+import asyncio
 import logging
 import os
 import sys
 import time
+import traceback
 from logging.handlers import TimedRotatingFileHandler
 
 import aiohttp
@@ -167,6 +169,50 @@ class StudyBot(commands.Bot):
         self.logger.info("-" * 15)
         self.logger.info("Bot successfully loaded")
         return
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
+        # If user made an error in their command
+        if isinstance(e, self.UserError):
+            await ctx.send(embed=discord.Embed(description=e.reason))
+            return
+
+        # If certain errors are raised, ignore it
+        elif isinstance(
+            e,
+            (
+                TimeoutError,
+                asyncio.TimeoutError,
+                commands.errors.CommandNotFound,
+                commands.errors.CheckFailure,
+            ),
+        ):
+            return
+
+        # Cooldown
+        elif isinstance(e, commands.errors.CommandOnCooldown):
+            await ctx.send(
+                embed=discord.Embed(
+                    description="Command on cooldown. Wait "
+                    + f"{round(e.retry_after, 2)} sec"
+                )
+            )
+            self.logger.info("Command ratelimited")
+            return
+        self.logger.error(e, exc_info=True)
+
+        if ctx.author.id == self.owner_id:
+            await ctx.send(f"```{e}{chr(10)}{traceback.format_exc()}```")
+        else:
+            err_embed = discord.Embed(
+                title=":(",
+                description=(
+                    "An unknown error has occurred,"
+                    + " please try a different command."
+                ),
+            )
+            await ctx.send(embed=err_embed)
+            return
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         self.logger.info(f"Bot joined guild {guild.name}")
