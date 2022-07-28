@@ -49,7 +49,7 @@ class SearchEngines(commands.Cog):
 
         # region args parsing
         if not args:  # checks if search is empty
-            await ctx.send(
+            await ctx.reply(
                 "Enter search query or cancel"
             )  # if empty, asks user for search query
             try:
@@ -62,7 +62,7 @@ class SearchEngines(commands.Cog):
                 search_args = usersearch.content.split("--")
 
             except asyncio.TimeoutError:
-                await ctx.send(
+                await ctx.reply(
                     f"{ctx.author.mention} Error: You took too long. Aborting"
                 )  # aborts if timeout
             except Exception as e:
@@ -85,7 +85,7 @@ class SearchEngines(commands.Cog):
 
         # allows users to edit their search query after results are returned
         self.bot.logger.debug("Sending loading message")
-        message = await ctx.send(self.bot.loading_message())
+        message = await ctx.reply(self.bot.loading_message())
         continueLoop = True
         while continueLoop:
             try:
