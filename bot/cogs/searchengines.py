@@ -113,7 +113,7 @@ class SearchEngines(commands.Cog):
                 )
 
                 done, _ = await asyncio.wait(
-                    [search_task, message_edit], return_when=asyncio.FIRST_COMPLETED
+                    (search_task, message_edit), return_when=asyncio.FIRST_COMPLETED
                 )
 
                 # Handles any exception raised by tasks

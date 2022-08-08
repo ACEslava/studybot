@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import subprocess
 import sys
 import time
 import traceback
@@ -253,9 +252,3 @@ class StudyBot(commands.Bot):
                     self.logger.info(f"Loaded {ext} in {round(time.time()-t0, 5)} sec")
         except Exception:
             pass
-
-        # Git Pull
-        if os.getenv("DEBUG_MODE") != "true":
-            self.logger.info("Pulling Git repo")
-            process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE)
-            self.logger.debug(process.communicate()[0])
