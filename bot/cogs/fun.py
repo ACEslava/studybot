@@ -159,7 +159,7 @@ class Fun(commands.Cog):
         }
 
         # Queries reddit API
-        msg = await ctx.send(self.bot.loading_message())
+        msg = await ctx.reply(self.bot.loading_message())
         img = ""
         self.bot.logger.debug("Sending API request")
 

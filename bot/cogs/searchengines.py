@@ -29,10 +29,10 @@ class SearchEngines(commands.Cog):
     )
     @commands.cooldown(1, 3, commands.BucketType.default)
     async def google(self, ctx: commands.Context, *args):
-        await self.__genericSearch(ctx, GoogleSearch, args)
+        await self.__genericSearch__(ctx, GoogleSearch, args)
         return
 
-    async def __genericSearch(
+    async def __genericSearch__(
         self, ctx: commands.Context, searchObject: Search, args: list
     ) -> None:
         """A generic search handler for bot search functions.
@@ -68,12 +68,11 @@ class SearchEngines(commands.Cog):
             except Exception as e:
                 raise e
         else:
-            search_args = " ".join([query.strip() for query in list(args)]).split(
-                "--"
-            )  # turns multiword search into single string.
+            # turns multiword search into single string.
+            search_args = " ".join([query.strip() for query in list(args)]).split("--")
 
-        userquery: str | None = search_args[0]
         # check if user actually searched something
+        userquery: str | None = search_args[0]
         if userquery is None:
             return
 
@@ -85,7 +84,7 @@ class SearchEngines(commands.Cog):
 
         # allows users to edit their search query after results are returned
         self.bot.logger.debug("Sending loading message")
-        message = await ctx.send(self.bot.loading_message())
+        message = await ctx.reply(self.bot.loading_message())
         continueLoop = True
         while continueLoop:
             try:

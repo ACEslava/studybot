@@ -1,6 +1,4 @@
-import os
 import random
-import time
 from typing import TYPE_CHECKING
 
 import discord
@@ -18,7 +16,7 @@ class OnHandling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: "discord.Message"):
-        if not message.author.bot:
+        if not message.author.bot and len(message.content) > 100:
             if message.content.lower() == "hello friends":
                 await message.channel.send(f"Hello <@{message.author.id}> :D")
                 self.bot.logger.info(f"Said hello to {message.author}")
@@ -87,17 +85,13 @@ class OnHandling(commands.Cog):
                     pass
 
     @commands.Cog.listener()
-    async def on_command_completion(self, ctx: commands.Context):
-        self.bot.logger.info(str(ctx.author) + " used " + ctx.command.name)
+    async def on_guild_join(self, guild: discord.Guild) -> None:
+        self.logger.info(f"Bot joined guild {guild.name}")
+        return
 
-        # Log all command uses
-        if os.getenv("DEBUG_MODE") != "true":
-            embed = discord.Embed(
-                title=ctx.command.name, description=ctx.message.content
-            )
-            embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-            embed.set_footer(text=time.asctime())
-            await self.bot.logging_channel.send(embed=embed)
+    @commands.Cog.listener()
+    async def on_guild_leave(self) -> None:
+        return
 
 
 async def setup(bot: "StudyBot") -> None:

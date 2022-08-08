@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import subprocess
 import sys
 import time
 import traceback
@@ -8,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 import aiohttp
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from functions.loading_message import get_loading_message
 
@@ -70,6 +71,57 @@ class StudyBot(commands.Bot):
     """
 
     def __init__(self) -> None:
+        async def command_logging(ctx: commands.Context):
+            """Log command usage before invoking the command
+
+            Parameters
+            ----------
+            ctx : commands.Context
+            """
+
+            self.logger.info(str(ctx.author) + " used " + ctx.command.name)
+
+            # Log all command uses
+            if os.getenv("DEBUG_MODE") != "true":
+                embed = discord.Embed(
+                    title=ctx.command.name, description=ctx.message.content
+                )
+                embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+                embed.set_footer(text=time.asctime())
+                await self.bot.logging_channel.send(embed=embed)
+
+        def setup_logging() -> None:
+            """Initializes logging system"""
+            fmt = logging.Formatter("%(asctime)s %(name)s [%(levelname)s]: %(message)s")
+
+            std = logging.StreamHandler(sys.stdout)
+            std.setLevel(
+                logging.DEBUG if os.getenv("DEBUG_MODE") == "true" else logging.INFO
+            )
+            std.setFormatter(fmt)
+
+            rot = TimedRotatingFileHandler(
+                filename="runtime.log",
+                when="D",
+                utc=True,
+                interval=7,
+                backupCount=4,
+                encoding="utf-8",
+                delay=False,
+            )
+            rot.setLevel(logging.INFO)
+            rot.setFormatter(fmt)
+
+            err = logging.FileHandler(filename="error.log", encoding="utf-8")
+            err.setLevel(logging.ERROR)
+            err.setFormatter(fmt)
+
+            self.logger = logging.getLogger(__name__)
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.addHandler(rot)
+            self.logger.addHandler(std)
+            self.logger.addHandler(err)
+
         intents = discord.Intents.all()
         super().__init__(
             command_prefix=default_command_prefix,
@@ -86,35 +138,7 @@ class StudyBot(commands.Bot):
         self.loading_message = get_loading_message
 
         # Set up logging
-        fmt = logging.Formatter("%(asctime)s %(name)s [%(levelname)s]: %(message)s")
-
-        std = logging.StreamHandler(sys.stdout)
-        std.setLevel(
-            logging.DEBUG if os.getenv("DEBUG_MODE") == "true" else logging.INFO
-        )
-        std.setFormatter(fmt)
-
-        rot = TimedRotatingFileHandler(
-            filename="runtime.log",
-            when="D",
-            utc=True,
-            interval=7,
-            backupCount=4,
-            encoding="utf-8",
-            delay=False,
-        )
-        rot.setLevel(logging.INFO)
-        rot.setFormatter(fmt)
-
-        err = logging.FileHandler(filename="error.log", encoding="utf-8")
-        err.setLevel(logging.ERROR)
-        err.setFormatter(fmt)
-
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(rot)
-        self.logger.addHandler(std)
-        self.logger.addHandler(err)
+        setup_logging()
 
         # Sync check for slash commands
         self.isSynced = False
@@ -125,22 +149,11 @@ class StudyBot(commands.Bot):
         # Add Reddit sent post cache
         self.reddit_sentPosts = {}
 
-    async def setup_hook(self) -> None:
-        # Load cogs
-        for cog in initial_cogs:
-            t0 = time.time()
-            await self.load_extension(cog)
-            t1 = time.time()
-            self.logger.debug(f"{cog} loaded in {round(t1-t0, 5)} sec")
+        # Add pre-command logging
+        self.before_invoke(command_logging)
 
-        # Initialise persistent ClientSession
-        t0 = time.time()
-        self.session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(keepalive_timeout=360.0, limit=None)
-        )
-        await (await self.session.get("https://www.google.com")).text()
-        t1 = time.time()
-        self.logger.debug(f"aiohttp session loaded in {round(t1-t0, 5)} sec")
+    async def setup_hook(self) -> None:
+        self.bot_refresh.start()
 
     async def on_ready(self) -> None:
         # Set presence
@@ -170,7 +183,6 @@ class StudyBot(commands.Bot):
         self.logger.info("Bot successfully loaded")
         return
 
-    @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
         # If user made an error in their command
         if isinstance(e, self.UserError):
@@ -214,9 +226,36 @@ class StudyBot(commands.Bot):
             await ctx.send(embed=err_embed)
             return
 
-    async def on_guild_join(self, guild: discord.Guild) -> None:
-        self.logger.info(f"Bot joined guild {guild.name}")
-        return
+    @tasks.loop(hours=10)
+    async def bot_refresh(self):
+        self.logger.info("Refreshing bot")
+        # Initialise persistent ClientSession
+        if "session" in dir(self):
+            self.logger.info("Reloading aiohttp session")
+            await self.session.close()
 
-    async def on_guild_leave(self) -> None:
-        return
+        t0 = time.time()
+        self.session = aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(keepalive_timeout=360.0, limit=None)
+        )
+        await (await self.session.get("https://www.google.com")).text()
+        self.logger.debug(f"aiohttp session loaded in {round(time.time()-t0, 5)} sec")
+
+        # Load cogs
+        try:
+            for ext in initial_cogs:
+                if ext in self.extensions.keys():
+                    await self.reload_extension(ext)
+                    self.logger.info(f"Reloading {ext}")
+                else:
+                    t0 = time.time()
+                    await self.load_extension(ext)
+                    self.logger.info(f"Loaded {ext} in {round(time.time()-t0, 5)} sec")
+        except Exception:
+            pass
+
+        # Git Pull
+        if os.getenv("DEBUG_MODE") != "true":
+            self.logger.info("Pulling Git repo")
+            process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE)
+            self.logger.debug(process.communicate()[0])
