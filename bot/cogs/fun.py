@@ -93,7 +93,7 @@ class Fun(commands.Cog):
             title="8ball", description=responses[random.randint(0, 19)]
         )
         embed.set_footer(text=f"Requested by {ctx.author}")
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
         return
 
     @commands.command(
@@ -204,7 +204,7 @@ class Fun(commands.Cog):
         # Does not embed gif for compatibility
         if ".gifv" in img:
             await msg.delete()
-            await ctx.send(
+            await ctx.reply(
                 content="https://www.reddit.com/r/"
                 + f"{img_data['subreddit']}/comments/{img_data['id']}"
                 + "\n"

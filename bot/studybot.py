@@ -186,7 +186,7 @@ class StudyBot(commands.Bot):
     async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
         # If user made an error in their command
         if isinstance(e, self.UserError):
-            await ctx.send(embed=discord.Embed(description=e.reason))
+            await ctx.reply(embed=discord.Embed(description=e.reason))
             return
 
         # If certain errors are raised, ignore it
@@ -203,7 +203,7 @@ class StudyBot(commands.Bot):
 
         # Cooldown
         elif isinstance(e, commands.errors.CommandOnCooldown):
-            await ctx.send(
+            await ctx.reply(
                 embed=discord.Embed(
                     description="Command on cooldown. Wait "
                     + f"{round(e.retry_after, 2)} sec"
@@ -214,7 +214,7 @@ class StudyBot(commands.Bot):
         self.logger.error(e, exc_info=True)
 
         if ctx.author.id == self.owner_id:
-            await ctx.send(f"```{e}{chr(10)}{traceback.format_exc()}```")
+            await ctx.reply(f"```{e}{chr(10)}{traceback.format_exc()}```")
         else:
             err_embed = discord.Embed(
                 title=":(",
@@ -223,7 +223,7 @@ class StudyBot(commands.Bot):
                     + " please try a different command."
                 ),
             )
-            await ctx.send(embed=err_embed)
+            await ctx.reply(embed=err_embed)
             return
 
     @tasks.loop(hours=10)

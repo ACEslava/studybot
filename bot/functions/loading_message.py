@@ -10,7 +10,7 @@ def get_loading_message() -> str:
         Loading message
     """
 
-    messages = [
+    messages = (
         "Reticulating splines...",
         "Generating witty dialog...",
         "Swapping time and space...",
@@ -277,6 +277,6 @@ def get_loading_message() -> str:
         "Please wait while we serve other customers...",
         "Our premium plan is faster",
         "Big Brother is always watching",
-    ]
+    )
 
     return random.choice(messages)

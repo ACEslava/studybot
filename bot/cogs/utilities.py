@@ -26,7 +26,7 @@ class Utilities(commands.Cog):
                 success_cog += "\n" + f" {ext}"
         except Exception:
             pass
-        await ctx.send(f"Reloaded ```{success_cog}```")
+        await ctx.reply(f"Reloaded ```{success_cog}```")
 
     @commands.hybrid_command(
         name="ping", with_app_command=True, description="Checks API response time"
@@ -35,7 +35,7 @@ class Utilities(commands.Cog):
     async def ping(self, ctx: commands.Context):
         t0 = time.time()
         if ctx.interaction is None:
-            msg = await ctx.send("Testing")
+            msg = await ctx.reply("Testing")
             t1 = time.time()
 
             await msg.edit(
