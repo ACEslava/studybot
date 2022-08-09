@@ -87,7 +87,7 @@ class StudyBot(commands.Bot):
                 )
                 embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
                 embed.set_footer(text=time.asctime())
-                await self.bot.logging_channel.send(embed=embed)
+                await self.logging_channel.send(embed=embed)
 
         def setup_logging() -> None:
             """Initializes logging system"""
