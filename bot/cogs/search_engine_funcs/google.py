@@ -167,13 +167,53 @@ class GoogleSearch(Search):
             result_embed.url = self.url
             return result_embed
 
-        def result_cleanup(soup: BeautifulSoup) -> set:
+        def featured_snippet_embed(result: BeautifulSoup) -> discord.Embed:
+            """Generates Discord Embed for Google Featured Snippet
+
+            :param result: Raw HTML from BeautifulSoup
+            :type result: BeautifulSoup
+            :return: Discord Embed
+            :rtype: discord.Embed
+            """
+            # creates and formats the embed
+
+            result_embed = discord.Embed(
+                title=(
+                    "[BETA] Featured Snippet: "
+                    + f'{self.query[:220]}{"..." if len(self.query) > 220 else ""}'
+                )
+            )
+
+            # extracts all meaningful text in the search result by div
+            printstring = "\n".join(
+                [
+                    " ".join(
+                        [
+                            string if string != "View all" else ""
+                            for string in div.stripped_strings
+                        ]
+                    )
+                    for div in result
+                ]
+            )
+
+            # discord prevents embeds longer than 2048 chars
+            # truncates adds ellipses to strings longer than 2048 chars
+            if len(printstring) > 1024:
+                printstring = printstring[:1020] + "..."
+
+            # sets embed description to string
+            result_embed.description = re.sub("\n\n+", "\n\n", printstring)
+            result_embed.url = self.url
+            return result_embed
+
+        def result_cleanup(soup: BeautifulSoup) -> List[BeautifulSoup]:
             """Filters HTML result for easier processing
 
             :param result: Raw HTML
             :type result: BeautifulSoup
             :return: Filtered HTML
-            :rtype: set
+            :rtype: list
             """
             # html div cleanup
             results = soup.find("div", {"id": "main"}).contents
@@ -194,14 +234,14 @@ class GoogleSearch(Search):
                 "Next >",
             }
             # bad div filtering
-            return {
+            return [
                 result
                 for result in results
                 if not any(
                     badResult in result.strings for badResult in wrong_first_results
                 )
                 or result.strings == ""
-            }
+            ]
 
         async def image_results(results: set) -> List[discord.Embed]:
             """Finds images from results
@@ -331,11 +371,27 @@ class GoogleSearch(Search):
                 embeds = await image_results(filtered_results)
             else:
                 self.bot.logger.debug("Parsing text results")
+
+                # Remove featured snippet from result
+                for idx, val in enumerate(filtered_results):
+                    if "Featured Snippets" in val.text:
+                        filtered_results.pop(idx)
+                        break
+
+                # Creates embed list
                 embeds = [
                     embed
                     for embed in map(text_embed, filtered_results)
                     if embed.description is not (None or "")
                 ]
+
+                # Add featured snippet to beginning
+                # Gx5Zad xpd EtOod pkphOe is Google obsfucation
+                featured_snippet = soup.find(
+                    "div", {"class": "Gx5Zad xpd EtOod pkphOe"}
+                )
+                if featured_snippet is not None:
+                    embeds.insert(0, featured_snippet_embed(featured_snippet))
 
             if embeds is None or len(embeds) == 0:
                 raise Search.NoResults
