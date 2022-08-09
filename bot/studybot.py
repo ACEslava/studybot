@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 import os
 import sys
@@ -83,10 +84,11 @@ class StudyBot(commands.Bot):
             # Log all command uses
             if os.getenv("DEBUG_MODE") != "true":
                 embed = discord.Embed(
-                    title=ctx.command.name, description=ctx.message.content
+                    title=ctx.command.name,
+                    description=ctx.message.content,
+                    timestamp=datetime.datetime.utcnow(),
                 )
                 embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-                embed.set_footer(text=time.asctime())
                 await self.logging_channel.send(embed=embed)
 
         def setup_logging() -> None:
@@ -160,7 +162,7 @@ class StudyBot(commands.Bot):
         await self.change_presence(status=discord.Status.idle, activity=game)
         self.logger.debug("Changing discord status")
 
-        # Sync commands
+        # Sync slash commands
         if not self.isSynced:
             tree_cmds = [c.name for c in self.tree.get_commands()]
             for cmd in await self.tree.fetch_commands():
