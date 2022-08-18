@@ -86,7 +86,7 @@ class StudyBot(commands.Bot):
                 embed = discord.Embed(
                     title=ctx.command.name,
                     description=ctx.message.content,
-                    timestamp=datetime.datetime.utcnow(),
+                    timestamp=datetime.datetime.now(),
                 )
                 embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
                 await self.logging_channel.send(embed=embed)
