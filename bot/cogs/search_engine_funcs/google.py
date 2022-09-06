@@ -187,10 +187,10 @@ class GoogleSearch(Search):
             # extracts all meaningful text in the search result by div
             printstring = "\n".join(
                 [
-                    " ".join(
+                    "\n".join(
                         [
                             string if string != "View all" else ""
-                            for string in div.stripped_strings
+                            for string in tuple(div.stripped_strings)[:2]
                         ]
                     )
                     for div in result

@@ -16,7 +16,7 @@ class OnHandling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: "discord.Message"):
-        if not message.author.bot and len(message.content) > 100:
+        if not message.author.bot:
             if message.content.lower() == "hello friends":
                 await message.channel.send(f"Hello <@{message.author.id}> :D")
                 self.bot.logger.info(f"Said hello to {message.author}")

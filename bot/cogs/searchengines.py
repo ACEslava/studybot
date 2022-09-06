@@ -130,6 +130,7 @@ class SearchEngines(commands.Cog):
                     userquery = message_edit.result()[1].content.replace(
                         f"&{ctx.invoked_with} ", ""
                     )  # finds the new user query
+                    message = await ctx.reply(self.bot.loading_message())
                     continue
 
             except (asyncio.TimeoutError, asyncio.CancelledError):
