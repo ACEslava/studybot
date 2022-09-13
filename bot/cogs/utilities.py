@@ -53,7 +53,7 @@ class Utilities(commands.Cog):
             )
             t1 = time.time()
 
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content=None,
                 embed=discord.Embed(
                     title="Ping",
