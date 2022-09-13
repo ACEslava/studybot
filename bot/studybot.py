@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import hashlib
 import logging
 import os
 import sys
@@ -185,6 +186,9 @@ class StudyBot(commands.Bot):
         return
 
     async def on_command_error(self, ctx: commands.Context, e: Exception) -> None:
+        def hash(i: str) -> str:
+            return hashlib.sha1(str.encode(i)).hexdigest()
+
         # If user made an error in their command
         if isinstance(e, self.UserError):
             await ctx.reply(embed=discord.Embed(description=e.reason))
@@ -213,6 +217,7 @@ class StudyBot(commands.Bot):
             self.logger.info("Command ratelimited")
             return
         self.logger.error(e, exc_info=True)
+        error_code = f"{hash(type(e).__name__)[:2]}.{hash(str(e))[:5]}"
 
         if ctx.author.id == self.owner_id:
             await ctx.reply(f"```{e}{chr(10)}{traceback.format_exc()}```")
@@ -224,8 +229,17 @@ class StudyBot(commands.Bot):
                     + " please try a different command."
                 ),
             )
+            err_embed.set_footer(f"Error Code: {error_code}")
             await ctx.reply(embed=err_embed)
-            return
+
+            debugchannel = await self.fetch_channel(829172391557070878)
+            msg = await debugchannel.send(
+                f"Error `{error_code}`{chr(10)}"
+                + f"```Command: {ctx.command}{chr(10)}"
+                + f"{chr(10)}{e}{chr(10)}{traceback.format_exc()}```"
+            )
+            await msg.add_reaction("✅")
+        return
 
     @tasks.loop(hours=10)
     async def bot_refresh(self):
