@@ -112,15 +112,16 @@ class SearchEngines(commands.Cog):
                     name="message_edited",
                 )
 
-                done, _ = await asyncio.wait(
+                done, waiting = await asyncio.wait(
                     (search_task, message_edit), return_when=asyncio.FIRST_COMPLETED
                 )
 
                 # Handles any exception raised by tasks
                 for t in done:
-                    exc = t.exception()
-                    if isinstance(exc, Exception):
-                        raise exc
+                    if isinstance(t.exception(), Exception):
+                        for task in waiting:
+                            task.cancel()
+                            return
 
                 # Checks if user edited message
                 if message_edit in done:

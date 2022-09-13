@@ -430,3 +430,4 @@ class GoogleSearch(Search):
         except Exception as e:
             await self.message.delete()
             await self.bot.on_command_error(self.ctx, e)
+            raise e

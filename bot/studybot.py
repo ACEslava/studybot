@@ -103,9 +103,9 @@ class StudyBot(commands.Bot):
 
             rot = TimedRotatingFileHandler(
                 filename="runtime.log",
-                when="D",
+                when="M",
                 utc=True,
-                interval=7,
+                interval=1,
                 backupCount=4,
                 encoding="utf-8",
                 delay=False,
