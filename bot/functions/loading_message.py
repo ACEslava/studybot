@@ -278,5 +278,9 @@ def get_loading_message() -> str:
         "Our premium plan is faster",
         "Big Brother is always watching",
     )
-
-    return random.choice(messages)
+    random.choice(messages)
+    # return random.choice(messages)
+    return (
+        "Planned Service Disruption: Bot will be offline from <t:1663398000:f> "
+        + "to <t:1663441200:f> due to infrastructure move"
+    )
