@@ -93,6 +93,15 @@ class OnHandling(commands.Cog):
     async def on_guild_leave(self) -> None:
         return
 
+    @commands.Cog.listener()
+    async def on_command(self, ctx: commands.Context) -> None:
+        await ctx.send(
+            embed=discord.Embed(
+                description="Planned Service Disruption: Bot will be offline from "
+                + "<t:1663398000:f> to <t:1663441200:f> due to infrastructure move"
+            )
+        )
+
 
 async def setup(bot: "StudyBot") -> None:
     await bot.add_cog(OnHandling(bot))
