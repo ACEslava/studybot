@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class GoogleSearch(Search):
-    def __int__(
+    def __init__(
         self,
         bot: "StudyBot",
         ctx: commands.Context,
