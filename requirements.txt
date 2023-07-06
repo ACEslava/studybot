@@ -43,7 +43,7 @@ python-dotenv==0.20.0
 PyYAML==6.0
 quantulum3==0.7.10
 scikit-learn==1.1.1
-scipy==1.8.1
+scipy==1.10.0
 six==1.16.0
 sklearn==0.0
 soupsieve==2.3.2.post1
